@@ -1,0 +1,37 @@
+[versions]
+kotlin = "1.9.24"
+
+gradle-build-config = "5.5.0"
+gradle-publish = "1.2.1"
+
+auto-service = "1.1.1"
+
+test-junit-jupiter = "5.10.3"
+test-kotest = "5.8.0"
+test-mockk = "1.13.10"
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "gradle-build-config" }
+gradle-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish" }
+
+[libraries]
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-gradle-plugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+
+auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+auto-service-processor = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
+
+test-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "test-junit-jupiter" }
+test-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "test-junit-jupiter" }
+test-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "test-junit-jupiter" }
+
+test-kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "test-kotest" }
+test-kotest-assertions-core-jvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "test-kotest" }
+
+test-mockk = { module = "io.mockk:mockk", version.ref = "test-mockk" }

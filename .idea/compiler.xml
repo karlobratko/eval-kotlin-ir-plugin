@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="eval-compiler-plugin.gradle-plugin" target="21" />
+      <module name="eval-compiler-plugin.gradle-plugin.functionalTest" target="21" />
+      <module name="eval-compiler-plugin.gradle-plugin.main" target="21" />
+      <module name="eval-compiler-plugin.gradle-plugin.test" target="21" />
+      <module name="eval-compiler-plugin.plugin.functionalTest" target="21" />
+      <module name="eval-compiler-plugin.plugin.main" target="21" />
+      <module name="eval-compiler-plugin.plugin.test" target="21" />
+      <module name="eval-plugin.eval-gradle-plugin" target="21" />
+      <module name="eval-plugin.eval-gradle-plugin.functionalTest" target="21" />
+      <module name="eval-plugin.eval-gradle-plugin.main" target="21" />
+      <module name="eval-plugin.eval-gradle-plugin.test" target="21" />
+      <module name="eval-plugin.gradle-plugin.functionalTest" target="21" />
+      <module name="eval-plugin.gradle-plugin.main" target="21" />
+      <module name="eval-plugin.gradle-plugin.test" target="21" />
+      <module name="eval-plugin.plugin" target="21" />
+      <module name="eval-plugin.plugin.functionalTest" target="21" />
+      <module name="eval-plugin.plugin.main" target="21" />
+      <module name="eval-plugin.plugin.test" target="21" />
+      <module name="eval.compiler-plugin.common" target="21" />
+      <module name="eval.compiler-plugin.common.main" target="21" />
+      <module name="eval.compiler-plugin.common.test" target="21" />
+      <module name="eval.plugin" target="21" />
+      <module name="eval.plugin.functionalTest" target="21" />
+      <module name="eval.plugin.main" target="21" />
+      <module name="eval.plugin.test" target="21" />
+      <module name="gradle-plugin" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
