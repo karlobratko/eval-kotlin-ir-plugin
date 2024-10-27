@@ -11,12 +11,10 @@ class EvalPluginTest {
 
     // Test case 1: Check if an eval function that adds constants can be evaluated at compile time
     @Test
-    fun `should replace evalAdd at compile time`() {
+    fun `should replace at compile time`() {
         val source = SourceFile.kotlin(
             "Main.kt", """
-            fun evalAdd(a: Int, b: Int): Int {
-                return a + b
-            }
+            fun evalAdd(a: Int, b: Int): Int = a + b
 
             fun main() {
                 println(evalAdd(2, 3))  // Should be replaced with 5 at compile time
@@ -32,7 +30,7 @@ class EvalPluginTest {
 
     // Test case 2: Check if an eval function with a non-constant argument is not evaluated at compile time
     @Test
-    fun `should not replace evalAdd when argument is non-constant`() {
+    fun `should not replace when argument is non-constant`() {
         val source = SourceFile.kotlin(
             "Main.kt", """
             fun evalAdd(a: Int, b: Int): Int {
@@ -54,15 +52,19 @@ class EvalPluginTest {
 
     // Test case 3: Check if a non-supported operation is left as is
     @Test
-    fun `should not replace unsupported operation evalMultiply`() {
+    fun `should replace variable at compile time`() {
         val source = SourceFile.kotlin(
             "Main.kt", """
-            fun evalMultiply(a: Int, b: Int): Int {
-                return a * b
+            fun evalAddition(a: Int, b: Int): Int {
+                if (a >= 10) {
+                    val c = 11
+                }
+                val c = (a + a) + (b + b) // should be 10 at compile time
+                return c
             }
 
             fun main() {
-                println(evalMultiply(2, 3))  // Should not be replaced by compile-time evaluation
+                println(evalAddition(2, 3))
             }
         """
         )

@@ -33,7 +33,7 @@ dependencies {
     implementation(kotlin("compiler-embeddable"))
     implementation(kotlin("compiler"))
 
-    testImplementation(kotlin("test")) // Includes JUnit and Kotlin Test DSL
+    testImplementation(kotlin("test"))
     testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.6.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }

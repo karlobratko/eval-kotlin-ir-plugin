@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation(libs.kotlin.compiler)
     implementation(kotlin("stdlib"))
+    implementation(libs.arrow.core)
 
     testImplementation(libs.test.junit.jupiter)
     testImplementation(libs.test.kotest.assertions.core)

@@ -24,8 +24,10 @@ class EvalIrGenerationExtension(
             EvalFunctionTransformer(
                 pluginContext = pluginContext,
                 messageCollector = messageCollector,
-                annotations = annotations,
-                prefixes = prefixes
+                evalConfig = EvalConfig(
+                    annotations = annotations,
+                    prefixes = prefixes
+                ),
             )
         )
 
