@@ -3,18 +3,21 @@ package hr.kbratko.eval
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import hr.kbratko.eval.EvalResult.Success
+import hr.kbratko.eval.stack.DeclarationScope
+import hr.kbratko.eval.stack.DeclarationStack
+import hr.kbratko.eval.stack.EvaluationScope
+import hr.kbratko.eval.stack.EvaluationStack
+import hr.kbratko.eval.stack.Outcome
 import org.jetbrains.kotlin.constant.BooleanValue
 import org.jetbrains.kotlin.constant.ConstantValue
-import org.jetbrains.kotlin.constant.IntValue
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrBlock
-import org.jetbrains.kotlin.ir.expressions.IrBranch
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
+import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.IrWhen
 import org.jetbrains.kotlin.ir.util.explicitParametersCount
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
@@ -22,86 +25,108 @@ import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
 class ComptimeEvaluator(call: IrCall) : IrElementVisitorVoid {
-    private val scopeStack: ScopeStack
-    private val evaluationGraph = EvaluationGraph()
+    private val scopeStack: DeclarationStack
+    private val evaluationStack = EvaluationStack()
 
     init {
         val function = call.symbol.owner
+        val parameters = function.valueParameters
         val arguments = call.valueArguments.filterIsInstance<IrConst<*>>().map { it.toConstantValue() }
-        val baseScope = Scope(function.valueParameters.zip(arguments.map { IntValue(it.value as Int) }).toMap())
-        scopeStack = ScopeStack(baseScope)
+        scopeStack = DeclarationStack(
+            baseScope = DeclarationScope(
+                element = call,
+                initVariables = parameters.zip(arguments).toMap()
+            )
+        )
     }
 
     val result: Either<EvalError, ConstantValue<*>>
-        get() = evaluationGraph.root?.let {
-            when (val result = it.result) {
-                EvalResult.NoResult -> ResultNotPresent.left()
-                is EvalResult.Failure -> result.error.left()
-                is EvalResult.Success -> result.value.right()
+        get() = evaluationStack.root.outcome.let {
+            when (it) {
+                is Outcome.Value -> it.value.right()
+                Outcome.Empty -> ChildElementResultNotPresent.left()
+                is Outcome.Control.Error -> it.error.left()
+                is Outcome.Control.Return -> it.value.right()
             }
-        } ?: ResultNotPresent.left()
+        }
 
     override fun visitElement(element: IrElement) {
-        if (evaluationGraph.isFailure()) return
-        evaluationGraph.push(element)
-        try {
+        evaluationStack.useScope(EvaluationScope(element)) {
             when (element) {
                 is IrBlock -> {
-                    scopeStack.enterScope()
-                    try {
+                    scopeStack.useScope(DeclarationScope(element)) {
                         element.acceptChildrenVoid(this@ComptimeEvaluator)
-                        if (evaluationGraph.isFailure()) return
-                    } finally {
-                        scopeStack.leaveScope()
+                        if (isControl) return
+
+                        updateOutcome(lastChildOutcome)
                     }
                 }
 
                 is IrVariable -> {
-                    element.acceptChildrenVoid(this@ComptimeEvaluator)
-                    if (evaluationGraph.isFailure()) return
+                    val initializer = element.initializer
+                    if (initializer != null) {
+                        initializer.acceptVoid(this@ComptimeEvaluator)
 
-                    // we can be sure that here we want last child result
-                    evaluationGraph.getLastChildResult()
-                        .onSuccess {
-                            scopeStack[element] = it
+                        scopeStack[element] = childOutcomes[initializer].let {
+                            when (it) {
+                                is Outcome.Value -> it.value
+
+                                Outcome.Empty -> {
+                                    fail(ChildElementResultNotPresent)
+                                    return
+                                }
+
+                                else -> return
+                            }
                         }
-                }
-
-                is IrGetValue -> {
-                    val owner = element.symbol.owner
-                    scopeStack[owner]
-                        .onNone {
-                            evaluationGraph.setErrorForCurrentNode(ResultNotPresent)
-                        }
-                        .onSome {
-                            evaluationGraph.setResultForCurrentNode(it)
-                        }
-                }
-
-                is IrConst<*> -> {
-                    evaluationGraph.setResultForCurrentNode(element.toConstantValue())
-                }
-
-                is IrWhen -> {
-                    element.branches.forEach {
-                        it.acceptVoid(this)
-                        if (evaluationGraph.isFailure()) return
-
-                        val result = evaluationGraph.getChildResult(it)
-                        if (result.isSuccess()) return
+                    } else {
+                        fail(UninitializedVariable)
+                        return
                     }
                 }
 
-                is IrBranch -> {
-                    element.condition.let { condition ->
-                        condition.acceptVoid(this)
-                        if (evaluationGraph.isFailure()) return
+                is IrGetValue -> {
+                    val value = scopeStack[element.symbol.owner]
+                    if (value != null) {
+                        setValue(value)
+                    } else {
+                        fail(VariableNotDefined)
+                        return
+                    }
+                }
 
-                        val result = evaluationGraph.getChildResult(condition)
-                        if (result is Success && result.value is BooleanValue && result.value.value == true) {
-                            element.result.let { result ->
-                                result.acceptVoid(this)
-                                if (evaluationGraph.isFailure()) return
+                is IrConst<*> -> {
+                    setValue(element.toConstantValue())
+                }
+
+                is IrWhen -> {
+                    element.branches.forEach { branch ->
+                        branch.condition.let { condition ->
+                            condition.acceptVoid(this@ComptimeEvaluator)
+                            if (isControl) return
+
+                            val outcome = childOutcomes[condition]
+                            if (outcome is Outcome.Value &&
+                                outcome.value is BooleanValue &&
+                                outcome.value.value == true
+                            ) {
+                                branch.result.let { body ->
+                                    body.acceptVoid(this@ComptimeEvaluator)
+                                    if (isControl) return
+
+                                    // TODO: value should be present, maybe we could enforce with error(...)
+                                    val result = childOutcomes[body]
+                                    if (result != null) {
+                                        when (result) {
+                                            is Outcome.Value -> {
+                                                setValue(result.value)
+                                                return
+                                            }
+
+                                            else -> return
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -109,18 +134,37 @@ class ComptimeEvaluator(call: IrCall) : IrElementVisitorVoid {
 
                 is IrCall -> {
                     element.acceptChildrenVoid(this@ComptimeEvaluator)
-                    if (evaluationGraph.isFailure()) return
+                    if (isControl) return
 
                     handleCall(element)
                 }
 
+                is IrReturn -> {
+                    val valueExpression = element.value
+                    valueExpression.acceptVoid(this@ComptimeEvaluator)
+
+                    childOutcomes[valueExpression].let {
+                        when (it) {
+                            is Outcome.Value -> {
+                                setReturn(it.value)
+                                return
+                            }
+
+                            Outcome.Empty -> {
+                                fail(ChildElementResultNotPresent)
+                                return
+                            }
+
+                            else -> return
+                        }
+                    }
+                }
+
                 else -> {
                     element.acceptChildrenVoid(this@ComptimeEvaluator)
-                    if (evaluationGraph.isFailure()) return
+                    if (isControl) return
                 }
             }
-        } finally {
-            evaluationGraph.pop()
         }
     }
 
@@ -129,71 +173,80 @@ class ComptimeEvaluator(call: IrCall) : IrElementVisitorVoid {
 
         val arguments = mutableListOf<ConstantValue<*>>()
 
-        val dispatchReceiver = call.dispatchReceiver
-        if (dispatchReceiver != null) {
-            val receiverResult = dispatchReceiver.let { evaluationGraph.getChildResult(it) }
-            val receiver = when (receiverResult) {
-                is EvalResult.Success -> receiverResult.value
+        evaluationStack.peek()?.apply {
+            val dispatchReceiver = call.dispatchReceiver
+            if (dispatchReceiver != null) {
+                val receiverOutcome = dispatchReceiver.let { childOutcomes[it] }
 
-                is EvalResult.Failure -> {
-                    evaluationGraph.setErrorForCurrentNode(receiverResult.error)
+                if (receiverOutcome != null) {
+                    val receiver = when (receiverOutcome) {
+                        is Outcome.Value -> receiverOutcome.value
+
+                        Outcome.Empty -> {
+                            fail(ChildElementResultNotPresent)
+                            return
+                        }
+
+                        else -> error("Should not happen!")
+                    }
+                    arguments.add(receiver)
+                }
+            }
+
+            val notNullArguments = call.valueArguments.filterNotNull()
+            if (notNullArguments.size != call.valueArguments.size) {
+                fail(ArgumentsCouldNotBeEvaluated)
+                return
+            }
+
+            val argumentOutcomes = notNullArguments.map { childOutcomes[it] }.filterNotNull()
+            if (argumentOutcomes.size != call.valueArguments.size) {
+                fail(ArgumentsCouldNotBeEvaluated)
+                return
+            }
+
+            arguments.addAll(argumentOutcomes
+                .map { argument ->
+                    when (argument) {
+                        is Outcome.Value -> argument.value
+
+                        Outcome.Empty -> {
+                            fail(ArgumentsCouldNotBeEvaluated)
+                            return
+                        }
+
+                        else -> error("Should not happen!")
+                    }
+                }
+            )
+
+            if (arguments.isEmpty()) {
+                fail(InsufficientNumberOfArguments)
+                return
+            }
+
+            if (arguments.size != function.explicitParametersCount) {
+                fail(InsufficientNumberOfArguments)
+                return
+            }
+
+            val operation = DefaultComptimeFunctionRegistry.findOperation(function.name.asString(), arguments)
+            if (operation == null) {
+                fail(UnsupportedMethod)
+                return
+            }
+
+            val result = operation(arguments)
+            when (result) {
+                is Either.Left -> {
+                    fail(result.value)
                     return
                 }
 
-                EvalResult.NoResult -> {
-                    evaluationGraph.setErrorForCurrentNode(DispatcherCouldNotBeEvaluated)
-                    return
+                is Either.Right -> {
+                    setValue(result.value)
                 }
             }
-            arguments.add(receiver)
-        }
-
-        val notNullArguments = call.valueArguments.filterNotNull()
-        if (notNullArguments.size != call.valueArguments.size) {
-            evaluationGraph.setErrorForCurrentNode(ArgumentsCouldNotBeEvaluated)
-            return
-        }
-
-        arguments.addAll(notNullArguments.map { evaluationGraph.getChildResult(it) }
-            .map { argument ->
-                when (argument) {
-                    is EvalResult.Success -> argument.value
-
-                    is EvalResult.Failure -> {
-                        evaluationGraph.setErrorForCurrentNode(argument.error)
-                        return
-                    }
-
-                    EvalResult.NoResult -> {
-                        evaluationGraph.setErrorForCurrentNode(ArgumentsCouldNotBeEvaluated)
-                        return
-                    }
-                }
-            }
-        )
-
-        if (arguments.isEmpty()) {
-            evaluationGraph.setErrorForCurrentNode(InsufficientNumberOfArguments)
-            return
-        }
-
-        if (arguments.size != function.explicitParametersCount) {
-            evaluationGraph.setErrorForCurrentNode(InsufficientNumberOfArguments)
-            return
-        }
-
-        // Find and invoke the appropriate operation
-        val operation = DefaultComptimeFunctionRegistry.findOperation(function.name.asString(), arguments)
-        if (operation == null) {
-            evaluationGraph.setErrorForCurrentNode(UnsupportedMethod)
-            return
-        }
-
-        val result = operation(arguments)
-        when (result) {
-            is EvalResult.Success -> evaluationGraph.setResultForCurrentNode(result.value)
-            is EvalResult.Failure -> evaluationGraph.setErrorForCurrentNode(result.error)
-            EvalResult.NoResult -> evaluationGraph.setErrorForCurrentNode(ArgumentsCouldNotBeEvaluated)
         }
     }
 }

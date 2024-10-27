@@ -4,20 +4,20 @@ sealed interface EvalError {
     val message: String
 }
 
-data object ResultNotPresent : EvalError {
+data object ChildElementResultNotPresent : EvalError {
     override val message = "Result not present"
+}
+
+data object UninitializedVariable : EvalError {
+    override val message = "Uninitialized variable"
+}
+
+data object VariableNotDefined : EvalError {
+    override val message = "Variable not defined"
 }
 
 data object AllArgumentsAreNotConstants : EvalError {
     override val message = "Not all arguments are constants"
-}
-
-data object DispatcherCouldNotBeEvaluated : EvalError {
-    override val message = "Dispatcher could not be evaluated"
-}
-
-data object UnsupportedArgumentType : EvalError {
-    override val message = "Unsupported argument type"
 }
 
 data object InsufficientNumberOfArguments : EvalError {
