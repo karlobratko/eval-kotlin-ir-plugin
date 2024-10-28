@@ -57,8 +57,10 @@ class EvalPluginTest {
             "Main.kt", """
             fun evalAddition(a: Int, b: Int): Int {
                 var i = 0
-                while (i < 3) {
-                    i++
+                if (a > 10) {
+                    i = 5
+                } else {
+                    i = 4
                 }
                 val c = (a + a) + (b + b) // should be 10 at compile time
                 return i
