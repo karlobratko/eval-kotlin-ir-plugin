@@ -18,7 +18,9 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.expressions.IrReturn
+import org.jetbrains.kotlin.ir.expressions.IrSetValue
 import org.jetbrains.kotlin.ir.expressions.IrWhen
+import org.jetbrains.kotlin.ir.expressions.IrWhileLoop
 import org.jetbrains.kotlin.ir.util.explicitParametersCount
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
@@ -67,7 +69,33 @@ class ComptimeEvaluator(call: IrCall) : IrElementVisitorVoid {
                     if (initializer != null) {
                         initializer.acceptVoid(this@ComptimeEvaluator)
 
-                        scopeStack[element] = childOutcomes[initializer].let {
+                        scopeStack.declare(
+                            name = element,
+                            value = childOutcomes[initializer].let {
+                                when (it) {
+                                    is Outcome.Value -> it.value
+
+                                    Outcome.Empty -> {
+                                        fail(ChildElementResultNotPresent)
+                                        return
+                                    }
+
+                                    else -> return
+                                }
+                            }
+                        )
+                    } else {
+                        fail(UninitializedVariable)
+                        return
+                    }
+                }
+
+                is IrSetValue -> {
+                    element.value.acceptVoid(this@ComptimeEvaluator)
+
+                    scopeStack.write(
+                        name = element.symbol.owner,
+                        childOutcomes[element.value].let {
                             when (it) {
                                 is Outcome.Value -> it.value
 
@@ -79,10 +107,7 @@ class ComptimeEvaluator(call: IrCall) : IrElementVisitorVoid {
                                 else -> return
                             }
                         }
-                    } else {
-                        fail(UninitializedVariable)
-                        return
-                    }
+                    )
                 }
 
                 is IrGetValue -> {
@@ -97,6 +122,28 @@ class ComptimeEvaluator(call: IrCall) : IrElementVisitorVoid {
 
                 is IrConst<*> -> {
                     setValue(element.toConstantValue())
+                }
+
+                is IrWhileLoop -> {
+                    var counter = 0
+                    while (true) {
+                        element.condition.acceptVoid(this@ComptimeEvaluator)
+                        if (isControl) return
+
+                        val outcome = childOutcomes[element.condition]
+                        if (outcome is Outcome.Value &&
+                            outcome.value is BooleanValue &&
+                            outcome.value.value == true
+                        ) {
+                            element.body?.let { body ->
+                                body.acceptVoid(this@ComptimeEvaluator)
+                                if (isControl) return
+                            }
+
+                            println(counter)
+                            counter++
+                        } else break
+                    }
                 }
 
                 is IrWhen -> {

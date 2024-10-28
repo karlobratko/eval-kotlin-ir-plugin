@@ -138,6 +138,18 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         }
 
         @Suppress("UNCHECKED_CAST")
+        register("inc", listOf(IntValue::class)) { args ->
+            val (a) = args as List<IntValue>
+            IntValue(a.value.inc()).right()
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        register("dec", listOf(IntValue::class)) { args ->
+            val (a) = args as List<IntValue>
+            IntValue(a.value.dec()).right()
+        }
+
+        @Suppress("UNCHECKED_CAST")
         register("minus", listOf(IntValue::class, IntValue::class)) { args ->
             val (a, b) = args as List<IntValue>
             IntValue(a.value - b.value).right()

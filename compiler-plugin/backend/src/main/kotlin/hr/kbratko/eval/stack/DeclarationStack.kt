@@ -26,9 +26,23 @@ class DeclarationStack(baseScope: DeclarationScope) : ElementScopeStack<Declarat
         push(baseScope)
     }
 
-    operator fun set(name: IrValueDeclaration, value: ConstantValue<*>) {
+    fun write(name: IrValueDeclaration, value: ConstantValue<*>) {
+        val scope = findScopeWithVariable(name)
+        if (scope != null) {
+            scope[name] = value
+        } else {
+            declare(name, value)
+        }
+    }
+
+    fun declare(name: IrValueDeclaration, value: ConstantValue<*>) {
         peek()!![name] = value
     }
+
+    private fun findScopeWithVariable(name: IrValueDeclaration): DeclarationScope? =
+        stack.reversed().firstOrNull {
+            it[name] != null
+        }
 
     operator fun get(name: IrValueDeclaration): ConstantValue<*>? = stack.reversed().firstNotNullOfOrNull { it[name] }
 }

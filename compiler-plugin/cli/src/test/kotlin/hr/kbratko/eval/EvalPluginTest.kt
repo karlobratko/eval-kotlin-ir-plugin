@@ -56,11 +56,12 @@ class EvalPluginTest {
         val source = SourceFile.kotlin(
             "Main.kt", """
             fun evalAddition(a: Int, b: Int): Int {
-                if (a > 10) {
-                    val a = 10
+                var i = 0
+                while (i < 3) {
+                    i++
                 }
                 val c = (a + a) + (b + b) // should be 10 at compile time
-                return c
+                return i
             }
 
             fun main() {

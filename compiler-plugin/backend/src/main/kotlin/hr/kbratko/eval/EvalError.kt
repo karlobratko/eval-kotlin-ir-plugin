@@ -4,6 +4,10 @@ sealed interface EvalError {
     val message: String
 }
 
+data object FunctionBodyNotPresent : EvalError {
+    override val message = "Function body not present"
+}
+
 data object ChildElementResultNotPresent : EvalError {
     override val message = "Result not present"
 }

@@ -3,7 +3,6 @@ package hr.kbratko.eval
 import arrow.core.Either
 import arrow.core.left
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.constant.ConstantValue
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.util.dump
@@ -12,11 +11,9 @@ import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
 class EvalFunctionTransformer(
     private val pluginContext: IrPluginContext,
-    messageCollector: MessageCollector,
+    private val messageCollector: EvalMessageCollector,
     private val evalConfig: EvalConfig
 ) : IrElementTransformerVoid() {
-    private val messageCollector = EvalMessageCollector(messageCollector)
-
     override fun visitCall(call: IrCall): IrExpression {
         val function = call.symbol.owner
 
@@ -39,7 +36,7 @@ class EvalFunctionTransformer(
 
     private fun tryEvaluateFunctionBody(call: IrCall): Either<EvalError, ConstantValue<*>> {
         val function = call.symbol.owner
-        val body = function.body ?: error("I guess this should not happen...")
+        val body = function.body ?: return FunctionBodyNotPresent.left()
 
         val comptimeEvaluator = ComptimeEvaluator(call)
 
