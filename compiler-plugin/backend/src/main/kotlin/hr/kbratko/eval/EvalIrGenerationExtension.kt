@@ -23,7 +23,6 @@ class EvalIrGenerationExtension(
 
         moduleFragment.transformChildrenVoid(
             EvalFunctionTransformer(
-                pluginContext = pluginContext,
                 messageCollector = EvalMessageCollector(messageCollector),
                 evalConfig = EvalConfig(
                     annotations = annotations,

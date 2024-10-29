@@ -1,13 +1,12 @@
-package hr.kbratko.eval.stack
+package hr.kbratko.eval.interpreter.stack
 
+import org.jetbrains.kotlin.backend.common.peek
+import org.jetbrains.kotlin.backend.common.pop
+import org.jetbrains.kotlin.backend.common.push
 import org.jetbrains.kotlin.constant.ConstantValue
-import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
 
-class DeclarationScope(
-    override val element: IrElement,
-    initVariables: Map<IrValueDeclaration, ConstantValue<*>> = mapOf()
-) : ElementScope<IrElement> {
+class DeclarationScope(initVariables: Map<IrValueDeclaration, ConstantValue<*>> = mapOf()) {
     private val variables: MutableMap<IrValueDeclaration, ConstantValue<*>> = mutableMapOf()
 
     init {
@@ -21,9 +20,30 @@ class DeclarationScope(
     operator fun get(name: IrValueDeclaration): ConstantValue<*>? = variables[name]
 }
 
-class DeclarationStack(baseScope: DeclarationScope) : ElementScopeStack<DeclarationScope>() {
+class DeclarationStack(baseScope: DeclarationScope) {
+    private val stack = mutableListOf<DeclarationScope>()
+
     init {
-        push(baseScope)
+        stack.push(baseScope)
+    }
+
+    fun push(scope: DeclarationScope): DeclarationScope? {
+        stack.push(scope)
+        return scope
+    }
+
+    fun pop(): DeclarationScope? = if (stack.isNotEmpty()) stack.pop() else null
+
+    fun peek(): DeclarationScope? = stack.peek()
+
+    inline fun scope(body: DeclarationScope.() -> Unit) {
+        val scope = push(DeclarationScope()) ?: return
+        try {
+            val result = scope.body()
+            return result
+        } finally {
+            pop()
+        }
     }
 
     fun write(name: IrValueDeclaration, value: ConstantValue<*>) {

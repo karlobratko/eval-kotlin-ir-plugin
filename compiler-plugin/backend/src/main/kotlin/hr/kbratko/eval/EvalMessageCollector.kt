@@ -13,11 +13,7 @@ class EvalMessageCollector(private val messageCollector: MessageCollector) : Mes
         report(CompilerMessageSeverity.INFO, message)
     }
 
-    fun reportError(message: String) {
-        report(CompilerMessageSeverity.ERROR, message)
-    }
-
-    fun reportLog(message: String) {
-        report(CompilerMessageSeverity.LOGGING, message)
+    fun reportWarn(message: String) {
+        report(CompilerMessageSeverity.WARNING, message)
     }
 }

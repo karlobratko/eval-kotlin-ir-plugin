@@ -16,8 +16,11 @@ import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstKind
+import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.isPrimitiveType
+import org.jetbrains.kotlin.ir.util.allParameters
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.FqName
 
@@ -27,8 +30,29 @@ fun IrFunction.hasAnyOfAnnotations(annotations: List<String>) =
 fun IrFunction.nameHasAnyOfPrefixes(prefixes: List<String>) =
     prefixes.any { name.asString().startsWith(it) }
 
-fun IrCall.areAllArgumentsIrConst(): Boolean =
-    valueArguments.filterIsInstance<IrConst<*>>().size == valueArgumentsCount
+fun IrCall.getAllConstArguments(): List<ConstantValue<*>> =
+    valueArguments.mapNotNull {
+        when (it) {
+            is IrConst<*> -> it.toConstantValue()
+            is IrCall -> it.getConstVal()
+            else -> null
+        }
+    }
+
+fun IrCall.getConstVal(): ConstantValue<*>? {
+    if (origin != IrStatementOrigin.GET_PROPERTY) return null
+
+    val property = symbol.owner.correspondingPropertySymbol?.owner
+    if (property == null || !property.isConst) return null
+
+    val initializer = property.backingField?.initializer?.expression as? IrConst<*>
+    return initializer?.toConstantValue()
+}
+
+fun IrFunction.allParameterTypesArePrimitive(): Boolean =
+    this.allParameters.all { it.type.isPrimitiveType() }
+
+fun IrCall.returnTypeIsPrimitive(): Boolean = symbol.owner.returnType.isPrimitiveType()
 
 @Suppress("UNCHECKED_CAST")
 fun <T> IrConst<T>.toConstantValue(): ConstantValue<T> = when (this.kind) {

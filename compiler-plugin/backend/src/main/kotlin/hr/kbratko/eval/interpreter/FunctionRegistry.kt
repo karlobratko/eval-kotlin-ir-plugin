@@ -1,8 +1,8 @@
-package hr.kbratko.eval
+package hr.kbratko.eval.interpreter
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.right
+import hr.kbratko.eval.ComptimeError
 import org.jetbrains.kotlin.constant.BooleanValue
 import org.jetbrains.kotlin.constant.ConstantValue
 import org.jetbrains.kotlin.constant.IntValue
@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.constant.StringValue
 import kotlin.reflect.KClass
 
 fun interface ComptimeFunction {
-    operator fun invoke(arguments: List<ConstantValue<*>>): Either<EvalError, ConstantValue<*>>
+    operator fun invoke(arguments: List<ConstantValue<*>>): Either<ComptimeError, ConstantValue<*>>
 }
 
 open class ComptimeFunctionRegistry {
@@ -164,11 +164,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         @Suppress("UNCHECKED_CAST")
         register("div", listOf(IntValue::class, IntValue::class)) { args ->
             val (a, b) = args as List<IntValue>
-            if (b.value == 0) {
-                DivisionByZero.left()
-            } else {
-                IntValue(a.value / b.value).right()
-            }
+            IntValue(a.value / b.value).right()
         }
 
         // Logical operations for Boolean

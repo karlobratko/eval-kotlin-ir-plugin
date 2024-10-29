@@ -55,19 +55,23 @@ class EvalPluginTest {
     fun `should replace variable at compile time`() {
         val source = SourceFile.kotlin(
             "Main.kt", """
+            const val x = 2
+
             fun evalAddition(a: Int, b: Int): Int {
-                var i = 0
-                if (a > 10) {
-                    i = 5
-                } else {
-                    i = 4
+                var i: Int = 0
+                while (i < a + b) {
+                    i++
+                }
+                i = if (a > 10) { 5 } else { 4 }
+                while (i > -10) {
+                    i--
                 }
                 val c = (a + a) + (b + b) // should be 10 at compile time
-                return i
+                return i + c
             }
 
             fun main() {
-                println(evalAddition(2, 3))
+                println(evalAddition(x, 3))
             }
         """
         )
