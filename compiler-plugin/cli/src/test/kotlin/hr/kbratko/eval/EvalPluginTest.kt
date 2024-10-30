@@ -59,15 +59,20 @@ class EvalPluginTest {
 
             fun evalAddition(a: Int, b: Int): Int {
                 var i: Int = 0
-                while (i < a + b) {
+                outer@ while(true) {
+                    var b: Int = 0
+                    var j: Int = 0
+                    inner@ while (true) {
+                        if (j == 1) break@inner
+                        if (b == 2) continue@outer
+                        j++
+                        b++
+                    }
+
+                    if (i == 10) break
                     i++
                 }
-                i = if (a > 10) { 5 } else { 4 }
-                while (i > -10) {
-                    i--
-                }
-                val c = (a + a) + (b + b) // should be 10 at compile time
-                return i + c
+                return i
             }
 
             fun main() {

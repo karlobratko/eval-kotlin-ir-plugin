@@ -23,8 +23,8 @@ class EvalFunctionTransformer(
                 .onRight { return it.toIrConst(function.returnType, call.startOffset, call.endOffset) }
                 .onLeft {
                     when (it) {
-                        is ComptimeUnexpectedError -> messageCollector.reportWarn("Error while evaluating function ${function.name.asString()}, $it")
-                        is ComptimeProducedError -> messageCollector.reportInfo("Comptime evaluation failed for function ${function.name.asString()}, $it")
+                        is ComptimeUnexpectedError -> messageCollector.reportWarn("Error while evaluating function ${function.name.asString()}, ${it.description}")
+                        is ComptimeProducedError -> messageCollector.reportInfo("Comptime evaluation failed for function ${function.name.asString()}, ${it.description}")
                     }
                 }
         }
