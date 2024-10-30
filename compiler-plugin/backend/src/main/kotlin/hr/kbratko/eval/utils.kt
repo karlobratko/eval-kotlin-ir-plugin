@@ -1,16 +1,7 @@
 package hr.kbratko.eval
 
-import org.jetbrains.kotlin.constant.BooleanValue
-import org.jetbrains.kotlin.constant.ByteValue
-import org.jetbrains.kotlin.constant.CharValue
-import org.jetbrains.kotlin.constant.ConstantValue
-import org.jetbrains.kotlin.constant.DoubleValue
-import org.jetbrains.kotlin.constant.FloatValue
-import org.jetbrains.kotlin.constant.IntValue
-import org.jetbrains.kotlin.constant.LongValue
-import org.jetbrains.kotlin.constant.NullValue
-import org.jetbrains.kotlin.constant.ShortValue
-import org.jetbrains.kotlin.constant.StringValue
+import org.jetbrains.kotlin.builtins.PrimitiveType
+import org.jetbrains.kotlin.builtins.UnsignedType
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -19,7 +10,12 @@ import org.jetbrains.kotlin.ir.expressions.IrConstKind
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.getPrimitiveType
+import org.jetbrains.kotlin.ir.types.getUnsignedType
+import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.types.isPrimitiveType
+import org.jetbrains.kotlin.ir.types.isString
+import org.jetbrains.kotlin.ir.types.isUnsignedType
 import org.jetbrains.kotlin.ir.util.allParameters
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.FqName
@@ -30,54 +26,75 @@ fun IrFunction.hasAnyOfAnnotations(annotations: List<String>) =
 fun IrFunction.nameHasAnyOfPrefixes(prefixes: List<String>) =
     prefixes.any { name.asString().startsWith(it) }
 
-fun IrCall.getAllConstArguments(): List<ConstantValue<*>> =
+fun IrCall.getAllConstArguments(): List<ComptimeConstant> =
     valueArguments.mapNotNull {
         when (it) {
-            is IrConst<*> -> it.toConstantValue()
-            is IrCall -> it.getConstVal()
+            is IrConst<*> -> it.toComptimeConstant()
+            is IrCall -> it.getComptimeConstant()
             else -> null
         }
     }
 
-fun IrCall.getConstVal(): ConstantValue<*>? {
+fun IrCall.getComptimeConstant(): ComptimeConstant? {
     if (origin != IrStatementOrigin.GET_PROPERTY) return null
 
     val property = symbol.owner.correspondingPropertySymbol?.owner
     if (property == null || !property.isConst) return null
 
     val initializer = property.backingField?.initializer?.expression as? IrConst<*>
-    return initializer?.toConstantValue()
+    return initializer?.toComptimeConstant()
 }
 
-fun IrFunction.allParameterTypesArePrimitive(): Boolean =
-    this.allParameters.all { it.type.isPrimitiveType() }
+fun IrType.isComptimeConstant(): Boolean = isPrimitiveType() || isString()
 
-fun IrCall.returnTypeIsPrimitive(): Boolean = symbol.owner.returnType.isPrimitiveType()
+fun IrFunction.allParameterTypesAreComptimeConstants(): Boolean =
+    this.allParameters.all { it.type.isComptimeConstant() }
 
-@Suppress("UNCHECKED_CAST")
-fun <T> IrConst<T>.toConstantValue(): ConstantValue<T> = when (this.kind) {
-    IrConstKind.Boolean -> BooleanValue(this.value as Boolean)
-    IrConstKind.Byte -> ByteValue(this.value as Byte)
-    IrConstKind.Int -> IntValue(this.value as Int)
-    IrConstKind.Short -> ShortValue(this.value as Short)
-    IrConstKind.Long -> LongValue(this.value as Long)
-    IrConstKind.Float -> FloatValue(this.value as Float)
-    IrConstKind.Double -> DoubleValue(this.value as Double)
-    IrConstKind.Char -> CharValue(this.value as Char)
-    IrConstKind.String -> StringValue(this.value as String)
-    IrConstKind.Null -> NullValue
-} as ConstantValue<T>
+fun IrCall.returnTypeIsComptimeConstant(): Boolean =
+    symbol.owner.returnType.isComptimeConstant()
 
-fun <T> ConstantValue<T>.toIrConst(irType: IrType, startOffset: Int, endOffset: Int) = when (this) {
-    is BooleanValue -> IrConstImpl.boolean(startOffset, endOffset, irType, value)
-    is ByteValue -> IrConstImpl.byte(startOffset, endOffset, irType, value)
-    is IntValue -> IrConstImpl.int(startOffset, endOffset, irType, value)
-    is ShortValue -> IrConstImpl.short(startOffset, endOffset, irType, value)
-    is LongValue -> IrConstImpl.long(startOffset, endOffset, irType, value)
-    is FloatValue -> IrConstImpl.float(startOffset, endOffset, irType, value)
-    is DoubleValue -> IrConstImpl.double(startOffset, endOffset, irType, value)
-    is CharValue -> IrConstImpl.char(startOffset, endOffset, irType, value)
-    is StringValue -> IrConstImpl.string(startOffset, endOffset, irType, value)
-    NullValue -> IrConstImpl.constNull(startOffset, endOffset, irType)
-    else -> error("Unsupported constant $this")
+fun IrConst<*>.toComptimeConstant(): ComptimeConstant? {
+    if (this.type.isNullable()) return null
+
+    if (this.type.isPrimitiveType()) {
+        if (this.type.isUnsignedType()) {
+            return when (this.type.getUnsignedType()) {
+                UnsignedType.UBYTE -> UByteConstant(this.value as UByte)
+                UnsignedType.USHORT -> UShortConstant(this.value as UShort)
+                UnsignedType.UINT -> UIntConstant(this.value as UInt)
+                UnsignedType.ULONG -> ULongConstant(this.value as ULong)
+                null -> null
+            }
+        }
+        return when (this.type.getPrimitiveType()) {
+            PrimitiveType.BOOLEAN -> BooleanConstant(this.value as Boolean)
+            PrimitiveType.CHAR -> CharConstant(this.value as Char)
+            PrimitiveType.BYTE -> ByteConstant(this.value as Byte)
+            PrimitiveType.SHORT -> ShortConstant(this.value as Short)
+            PrimitiveType.INT -> IntConstant(this.value as Int)
+            PrimitiveType.LONG -> LongConstant(this.value as Long)
+            PrimitiveType.FLOAT -> FloatConstant(this.value as Float)
+            PrimitiveType.DOUBLE -> DoubleConstant(this.value as Double)
+            null -> null
+        }
+    }
+    if (this.type.isString()) return StringConstant(this.value as String)
+
+    return null
+}
+
+fun ComptimeConstant.toIrConst(irType: IrType, startOffset: Int, endOffset: Int): IrConst<*> = when (this) {
+    is BooleanConstant -> IrConstImpl.boolean(startOffset, endOffset, irType, value)
+    is CharConstant -> IrConstImpl.char(startOffset, endOffset, irType, value)
+    is ByteConstant -> IrConstImpl.byte(startOffset, endOffset, irType, value)
+    is ShortConstant -> IrConstImpl.short(startOffset, endOffset, irType, value)
+    is IntConstant -> IrConstImpl.int(startOffset, endOffset, irType, value)
+    is LongConstant -> IrConstImpl.long(startOffset, endOffset, irType, value)
+    is UByteConstant -> IrConstImpl(startOffset, endOffset, irType, IrConstKind.Byte, value.toByte())
+    is UShortConstant -> IrConstImpl.short(startOffset, endOffset, irType, value.toShort())
+    is UIntConstant -> IrConstImpl.int(startOffset, endOffset, irType, value.toInt())
+    is ULongConstant -> IrConstImpl.long(startOffset, endOffset, irType, value.toLong())
+    is FloatConstant -> IrConstImpl.float(startOffset, endOffset, irType, value)
+    is DoubleConstant -> IrConstImpl.double(startOffset, endOffset, irType, value)
+    is StringConstant -> IrConstImpl.string(startOffset, endOffset, irType, value)
 }

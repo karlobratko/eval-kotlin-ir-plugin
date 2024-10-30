@@ -2,8 +2,7 @@ package hr.kbratko.eval
 
 import arrow.core.Either
 import arrow.core.left
-import hr.kbratko.eval.interpreter.ComptimeInterpreter
-import org.jetbrains.kotlin.constant.ConstantValue
+import hr.kbratko.eval.interpreter.comptimeCall
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 
@@ -32,14 +31,14 @@ class EvalFunctionTransformer(
         return super.visitCall(call)
     }
 
-    private fun tryEvaluateCall(call: IrCall): Either<ComptimeError, ConstantValue<*>> {
+    private fun tryEvaluateCall(call: IrCall): Either<ComptimeError, ComptimeConstant> {
         val function = call.symbol.owner
 
-        if (!call.returnTypeIsPrimitive()) {
+        if (!call.returnTypeIsComptimeConstant()) {
             return ReturnTypeNotPrimitive(call).left()
         }
 
-        if (!function.allParameterTypesArePrimitive()) {
+        if (!function.allParameterTypesAreComptimeConstants()) {
             return ArgumentTypesNotPrimitive(call).left()
         }
         val parameters = function.valueParameters
@@ -48,12 +47,7 @@ class EvalFunctionTransformer(
         if (arguments.size != parameters.size) {
             return ArgumentsNotConstants(call).left()
         }
-        val body = function.body
-        if (body == null) {
-            return FunctionBodyNotPresent(function).left()
-        }
 
-        val comptimeInterpreter = ComptimeInterpreter(parameters.zip(arguments).toMap(), body)
-        return comptimeInterpreter.interpret()
+        return function.comptimeCall(parameters.zip(arguments).toMap())
     }
 }

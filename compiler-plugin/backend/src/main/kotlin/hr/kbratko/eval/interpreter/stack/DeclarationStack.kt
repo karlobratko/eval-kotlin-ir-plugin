@@ -1,23 +1,23 @@
 package hr.kbratko.eval.interpreter.stack
 
+import hr.kbratko.eval.ComptimeConstant
 import org.jetbrains.kotlin.backend.common.peek
 import org.jetbrains.kotlin.backend.common.pop
 import org.jetbrains.kotlin.backend.common.push
-import org.jetbrains.kotlin.constant.ConstantValue
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
 
-class DeclarationScope(initVariables: Map<IrValueDeclaration, ConstantValue<*>> = mapOf()) {
-    private val variables: MutableMap<IrValueDeclaration, ConstantValue<*>> = mutableMapOf()
+class DeclarationScope(initVariables: Map<IrValueDeclaration, ComptimeConstant> = mapOf()) {
+    private val variables: MutableMap<IrValueDeclaration, ComptimeConstant> = mutableMapOf()
 
     init {
         variables.putAll(initVariables)
     }
 
-    operator fun set(name: IrValueDeclaration, value: ConstantValue<*>) {
+    operator fun set(name: IrValueDeclaration, value: ComptimeConstant) {
         variables[name] = value
     }
 
-    operator fun get(name: IrValueDeclaration): ConstantValue<*>? = variables[name]
+    operator fun get(name: IrValueDeclaration): ComptimeConstant? = variables[name]
 }
 
 class DeclarationStack(baseScope: DeclarationScope) {
@@ -46,7 +46,7 @@ class DeclarationStack(baseScope: DeclarationScope) {
         }
     }
 
-    fun write(name: IrValueDeclaration, value: ConstantValue<*>) {
+    fun write(name: IrValueDeclaration, value: ComptimeConstant) {
         val scope = findScopeWithVariable(name)
         if (scope != null) {
             scope[name] = value
@@ -55,7 +55,7 @@ class DeclarationStack(baseScope: DeclarationScope) {
         }
     }
 
-    fun declare(name: IrValueDeclaration, value: ConstantValue<*>) {
+    fun declare(name: IrValueDeclaration, value: ComptimeConstant) {
         peek()!![name] = value
     }
 
@@ -64,5 +64,5 @@ class DeclarationStack(baseScope: DeclarationScope) {
             it[name] != null
         }
 
-    operator fun get(name: IrValueDeclaration): ConstantValue<*>? = stack.reversed().firstNotNullOfOrNull { it[name] }
+    operator fun get(name: IrValueDeclaration): ComptimeConstant? = stack.reversed().firstNotNullOfOrNull { it[name] }
 }

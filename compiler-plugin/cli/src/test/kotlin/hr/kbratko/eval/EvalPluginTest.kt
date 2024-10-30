@@ -55,7 +55,7 @@ class EvalPluginTest {
     fun `should replace variable at compile time`() {
         val source = SourceFile.kotlin(
             "Main.kt", """
-            const val x = 2
+            const val x = 2u
 
             fun evalAddition(a: Int, b: Int): Int {
                 var i: Int = 0
@@ -76,7 +76,7 @@ class EvalPluginTest {
             }
 
             fun main() {
-                println(evalAddition(x, 3))
+                println(evalAddition(2, 3))
             }
         """
         )

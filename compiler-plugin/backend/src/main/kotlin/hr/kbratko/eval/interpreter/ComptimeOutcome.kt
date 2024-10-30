@@ -1,24 +1,34 @@
 package hr.kbratko.eval.interpreter
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import hr.kbratko.eval.ComptimeConstant
 import hr.kbratko.eval.ComptimeError
+import hr.kbratko.eval.EmptyEvaluationOutcome
+import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.EvaluationError
+import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.Return
 import hr.kbratko.eval.interpreter.EvaluationOutcome.EvaluationResult.ConstantResult
-import org.jetbrains.kotlin.constant.BooleanValue
-import org.jetbrains.kotlin.constant.ConstantValue
+import hr.kbratko.eval.isConstantFalse
+import hr.kbratko.eval.isConstantTrue
 import org.jetbrains.kotlin.ir.expressions.IrLoop
 import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
 
-sealed interface EvaluationOutcome<out T> {
+sealed interface EvaluationOutcome {
 
-    sealed interface EvaluationResult<out T> : EvaluationOutcome<T> {
-        data class ConstantResult<T>(val value: ConstantValue<T>) : EvaluationResult<T>
-        data object NoResult : EvaluationResult<Nothing>
+    sealed interface EvaluationResult : EvaluationOutcome {
+        data class ConstantResult(val value: ComptimeConstant) : EvaluationResult
+        data object NoResult : EvaluationResult
     }
 
-    sealed interface ControlFlow<out T> : EvaluationOutcome<T> {
+    sealed interface ControlFlow : EvaluationOutcome {
 
-        data class Return<T>(val value: ConstantValue<T>, val target: IrReturnTargetSymbol) : ControlFlow<T>
+        data class Return(
+            val value: ComptimeConstant,
+            val target: IrReturnTargetSymbol
+        ) : ControlFlow
 
-        sealed interface LoopControl : ControlFlow<Nothing> {
+        sealed interface LoopControl : ControlFlow {
             val loop: IrLoop
             val label: String?
 
@@ -28,16 +38,24 @@ sealed interface EvaluationOutcome<out T> {
             fun matches(element: IrLoop): Boolean = label == element.label || loop == element
         }
 
-        data class EvaluationError(val error: ComptimeError) : ControlFlow<Nothing>
+        data class EvaluationError(val error: ComptimeError) : ControlFlow
     }
 
-    val isControlFlow: Boolean get() = this is ControlFlow<*>
+    val isControlFlow: Boolean get() = this is ControlFlow
 
 }
 
 
-fun EvaluationOutcome<*>.isBooleanTrueValue() =
-    this is ConstantResult && this.value is BooleanValue && this.value.value == true
+fun EvaluationOutcome.isBooleanTrueResult() =
+    this is ConstantResult && this.value.isConstantTrue()
 
-fun EvaluationOutcome<*>.isBooleanFalseValue() =
-    this is ConstantResult && this.value is BooleanValue && this.value.value == false
+fun EvaluationOutcome.isBooleanFalseResult() =
+    this is ConstantResult && this.value.isConstantFalse()
+
+fun EvaluationOutcome.toEither(): Either<ComptimeError, ComptimeConstant> =
+    when (this) {
+        is ConstantResult -> value.right()
+        is Return -> value.right()
+        is EvaluationError -> error.left()
+        else -> EmptyEvaluationOutcome.left()
+    }
