@@ -4,10 +4,6 @@ sealed interface ComptimeConstant {
     val value: Any
 }
 
-fun ComptimeConstant.isConstantTrue() = this is BooleanConstant && this.value == true
-
-fun ComptimeConstant.isConstantFalse() = this is BooleanConstant && this.value == false
-
 data class BooleanConstant(override val value: Boolean) : ComptimeConstant
 
 data class CharConstant(override val value: Char) : ComptimeConstant
@@ -41,3 +37,7 @@ sealed interface DecimalConstant : NumericConstant
 data class FloatConstant(override val value: Float) : DecimalConstant
 
 data class DoubleConstant(override val value: Double) : DecimalConstant
+
+fun ComptimeConstant.isConstantTrue() = this is BooleanConstant && this.value == true
+
+fun ComptimeConstant.isConstantFalse() = this is BooleanConstant && this.value == false

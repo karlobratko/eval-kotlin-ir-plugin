@@ -58,8 +58,8 @@ class ValueArgumentsCouldNotBeEvaluated(element: IrCall) : ComptimeProducedError
     override val description = "Arguments could not be evaluated (${element.dump()})"
 }
 
-class UnsupportedMethod(element: IrCall, methodName: String) : ComptimeProducedError {
-    override val description = "Unsupported method $methodName (${element.dump()})"
+class UnsupportedMethod(methodName: String, arguments: List<ComptimeConstant>) : ComptimeProducedError {
+    override val description = "Unsupported method $methodName ($arguments)"
 }
 
 class UnsupportedElementType(element: IrElement) : ComptimeProducedError {

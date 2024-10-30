@@ -164,19 +164,13 @@ class ComptimeIrCallInterpreter(
         }
 
         if (!function.returnType.isPrimitiveTypeOrString()) {
-            return EvaluationError(UnsupportedMethod(element, function.name.asString()))
+            return EvaluationError(UnsupportedMethod(function.name.asString(), arguments))
         }
 
-        // TODO: use ComptimeConstant type
-        val operation = DefaultComptimeFunctionRegistry.findOperation(
+        val result = DefaultComptimeFunctionRegistry.execute(
             name = function.name.asString(),
-            signature = ComptimeFunctionSignature(arguments.map { it::class })
+            arguments = arguments,
         )
-        if (operation == null) {
-            return EvaluationError(UnsupportedMethod(element, function.name.asString()))
-        }
-
-        val result = operation(arguments)
         return when (result) {
             is Either.Left -> EvaluationError(result.value)
             is Either.Right -> ConstantResult(result.value)

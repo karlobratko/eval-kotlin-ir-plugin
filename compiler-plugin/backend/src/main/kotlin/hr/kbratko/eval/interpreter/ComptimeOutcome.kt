@@ -45,7 +45,6 @@ sealed interface EvaluationOutcome {
 
 }
 
-
 fun EvaluationOutcome.isBooleanTrueResult() =
     this is ConstantResult && this.value.isConstantTrue()
 

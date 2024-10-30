@@ -1,15 +1,16 @@
 package hr.kbratko.eval.interpreter
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import hr.kbratko.eval.BooleanConstant
 import hr.kbratko.eval.ComptimeConstant
 import hr.kbratko.eval.ComptimeError
 import hr.kbratko.eval.IntConstant
 import hr.kbratko.eval.StringConstant
-import kotlin.reflect.KClass
+import hr.kbratko.eval.UnsupportedMethod
 
-data class ComptimeFunctionSignature(val argumentTypes: List<KClass<out ComptimeConstant>>)
+data class ComptimeFunctionSignature(val argumentTypes: List<ComptimeType>)
 
 fun interface ComptimeFunction {
     operator fun invoke(arguments: List<ComptimeConstant>): Either<ComptimeError, ComptimeConstant>
@@ -20,7 +21,6 @@ data class ComptimeFunctionDefinition(
     val implementation: ComptimeFunction
 )
 
-// TODO: refine logic with predicate types
 open class ComptimeFunctionRegistry {
 
     private val operations: MutableMap<String, MutableMap<ComptimeFunctionSignature, ComptimeFunction>> = mutableMapOf()
@@ -33,8 +33,16 @@ open class ComptimeFunctionRegistry {
         }
     }
 
-    open fun findOperation(name: String, signature: ComptimeFunctionSignature): ComptimeFunction? =
-        operations[name]?.get(signature)
+    open fun execute(name: String, arguments: List<ComptimeConstant>): Either<ComptimeError, ComptimeConstant> =
+        operations[name]
+            ?.firstNotNullOfOrNull { (signature, function) ->
+                if (signature.argumentTypes.size == arguments.size &&
+                    signature.argumentTypes.zip(arguments).all { (type, constant) -> type.matches(constant) }
+                ) function
+                else null
+            }
+            ?.invoke(arguments)
+            ?: UnsupportedMethod(name, arguments).left()
 }
 
 // TODO: support all primitive types and String
@@ -44,19 +52,10 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
             val (a, b) = args
             BooleanConstant(a.value == b.value).right()
         }
-
         register(
             listOf("equals", "EQEQ"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
-                implementation = equals
-            ),
-            ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(BooleanConstant::class, BooleanConstant::class)),
-                implementation = equals
-            ),
-            ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(ComptimeConstantType, ComptimeConstantType)),
                 implementation = equals
             )
         )
@@ -68,15 +67,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("notEquals"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
-                implementation = notEquals
-            ),
-            ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(BooleanConstant::class, BooleanConstant::class)),
-                implementation = notEquals
-            ),
-            ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(ComptimeConstantType, ComptimeConstantType)),
                 implementation = notEquals
             )
         )
@@ -85,14 +76,14 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("compareTo"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     IntConstant(a.value.compareTo(b.value)).right()
                 }
             ),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(StringConstantType, StringConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<StringConstant>
                     IntConstant(a.value.compareTo(b.value)).right()
@@ -104,14 +95,14 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("greater"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     BooleanConstant(a.value > b.value).right()
                 }
             ),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(StringConstantType, StringConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<StringConstant>
                     BooleanConstant(a.value > b.value).right()
@@ -123,14 +114,14 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("greaterOrEqual"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     BooleanConstant(a.value >= b.value).right()
                 }
             ),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(StringConstantType, StringConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<StringConstant>
                     BooleanConstant(a.value >= b.value).right()
@@ -142,14 +133,14 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("less"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     BooleanConstant(a.value < b.value).right()
                 }
             ),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(StringConstantType, StringConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<StringConstant>
                     BooleanConstant(a.value < b.value).right()
@@ -161,14 +152,14 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("lessOrEqual"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     BooleanConstant(a.value <= b.value).right()
                 }
             ),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(StringConstantType, StringConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<StringConstant>
                     BooleanConstant(a.value <= b.value).right()
@@ -180,14 +171,14 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("plus"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     IntConstant(a.value + b.value).right()
                 }
             ),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(StringConstant::class, StringConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(StringConstantType, StringConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<StringConstant>
                     StringConstant(a.value + b.value).right()
@@ -199,7 +190,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("inc"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a) = args as List<IntConstant>
                     IntConstant(a.value.inc()).right()
@@ -211,7 +202,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("dec"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a) = args as List<IntConstant>
                     IntConstant(a.value.dec()).right()
@@ -223,7 +214,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("minus"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     IntConstant(a.value - b.value).right()
@@ -235,7 +226,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("times"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     IntConstant(a.value * b.value).right()
@@ -247,7 +238,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("div"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(IntConstant::class, IntConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(IntConstantType, IntConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<IntConstant>
                     IntConstant(a.value / b.value).right()
@@ -259,7 +250,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("and"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(BooleanConstant::class, BooleanConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(BooleanConstantType, BooleanConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<BooleanConstant>
                     BooleanConstant(a.value && b.value).right()
@@ -271,7 +262,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("or"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(BooleanConstant::class, BooleanConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(BooleanConstantType, BooleanConstantType)),
                 implementation = ComptimeFunction { args ->
                     val (a, b) = args as List<BooleanConstant>
                     BooleanConstant(a.value || b.value).right()
@@ -283,7 +274,7 @@ object DefaultComptimeFunctionRegistry : ComptimeFunctionRegistry() {
         register(
             listOf("not"),
             ComptimeFunctionDefinition(
-                signature = ComptimeFunctionSignature(listOf(BooleanConstant::class)),
+                signature = ComptimeFunctionSignature(listOf(BooleanConstantType)),
                 implementation = ComptimeFunction { args ->
                     val a = args.first() as BooleanConstant
                     BooleanConstant(!a.value).right()
