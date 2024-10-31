@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Test
 import kotlin.test.assertEquals
 
+// TODO: make tests better
 @OptIn(ExperimentalCompilerApi::class)
 class EvalPluginTest {
 
@@ -72,11 +73,16 @@ class EvalPluginTest {
                     if (i == 10) break
                     i++
                 }
-                return i
+                if(a <= b) return a
+                if(a === b) return b 
+                val s = a.toString()
+                return -i
             }
 
+            fun evalString(a: String, b: String) = "${'$'}a ${'$'}{if (a.length > 3) 1 else 2} ${'$'}b"
+
             fun main() {
-                println(evalAddition(2, 3))
+                println(evalString("karlo", "bratko"))
             }
         """
         )

@@ -1,23 +1,26 @@
-package hr.kbratko.eval.interpreter
+package hr.kbratko.eval.interpreter.functions
 
-import hr.kbratko.eval.BooleanConstant
-import hr.kbratko.eval.ByteConstant
-import hr.kbratko.eval.CharConstant
-import hr.kbratko.eval.ComptimeConstant
-import hr.kbratko.eval.DecimalConstant
-import hr.kbratko.eval.DoubleConstant
-import hr.kbratko.eval.FloatConstant
-import hr.kbratko.eval.IntConstant
-import hr.kbratko.eval.IntegerConstant
-import hr.kbratko.eval.LongConstant
-import hr.kbratko.eval.NumericConstant
-import hr.kbratko.eval.ShortConstant
-import hr.kbratko.eval.StringConstant
-import hr.kbratko.eval.UByteConstant
-import hr.kbratko.eval.UIntConstant
-import hr.kbratko.eval.ULongConstant
-import hr.kbratko.eval.UShortConstant
-import hr.kbratko.eval.UnsignedConstant
+import hr.kbratko.eval.types.BooleanConstant
+import hr.kbratko.eval.types.ByteConstant
+import hr.kbratko.eval.types.CharConstant
+import hr.kbratko.eval.types.ComptimeConstant
+import hr.kbratko.eval.types.DecimalConstant
+import hr.kbratko.eval.types.DoubleConstant
+import hr.kbratko.eval.types.FloatConstant
+import hr.kbratko.eval.types.IntConstant
+import hr.kbratko.eval.types.IntegerConstant
+import hr.kbratko.eval.types.LongConstant
+import hr.kbratko.eval.types.NumericConstant
+import hr.kbratko.eval.types.ShortConstant
+import hr.kbratko.eval.types.SignedConstant
+import hr.kbratko.eval.types.SignedIntegerConstant
+import hr.kbratko.eval.types.StringConstant
+import hr.kbratko.eval.types.UByteConstant
+import hr.kbratko.eval.types.UIntConstant
+import hr.kbratko.eval.types.ULongConstant
+import hr.kbratko.eval.types.UShortConstant
+import hr.kbratko.eval.types.UnsignedConstant
+import hr.kbratko.eval.types.UnsignedIntegerConstant
 
 fun interface ComptimeType {
     fun matches(constant: ComptimeConstant): Boolean
@@ -33,7 +36,11 @@ val StringConstantType = ComptimeType { it is StringConstant }
 
 val NumericConstantType = ComptimeType { it is NumericConstant }
 
+val SignedConstantType = ComptimeType { it is SignedConstant }
+
 val IntegerConstantType = ComptimeType { it is IntegerConstant }
+
+val SignedIntegerConstantType = ComptimeType { it is SignedIntegerConstant }
 
 val ByteConstantType = ComptimeType { it is ByteConstant }
 
@@ -44,6 +51,8 @@ val IntConstantType = ComptimeType { it is IntConstant }
 val LongConstantType = ComptimeType { it is LongConstant }
 
 val UnsignedConstantType = ComptimeType { it is UnsignedConstant }
+
+val UnsignedIntegerConstantType = ComptimeType { it is UnsignedIntegerConstant }
 
 val UByteConstantType = ComptimeType { it is UByteConstant }
 

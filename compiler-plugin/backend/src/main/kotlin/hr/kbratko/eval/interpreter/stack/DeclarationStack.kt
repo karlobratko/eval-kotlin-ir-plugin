@@ -1,6 +1,6 @@
 package hr.kbratko.eval.interpreter.stack
 
-import hr.kbratko.eval.ComptimeConstant
+import hr.kbratko.eval.types.ComptimeConstant
 import org.jetbrains.kotlin.backend.common.peek
 import org.jetbrains.kotlin.backend.common.pop
 import org.jetbrains.kotlin.backend.common.push

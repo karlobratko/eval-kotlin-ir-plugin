@@ -1,5 +1,19 @@
 package hr.kbratko.eval
 
+import hr.kbratko.eval.types.BooleanConstant
+import hr.kbratko.eval.types.ByteConstant
+import hr.kbratko.eval.types.CharConstant
+import hr.kbratko.eval.types.ComptimeConstant
+import hr.kbratko.eval.types.DoubleConstant
+import hr.kbratko.eval.types.FloatConstant
+import hr.kbratko.eval.types.IntConstant
+import hr.kbratko.eval.types.LongConstant
+import hr.kbratko.eval.types.ShortConstant
+import hr.kbratko.eval.types.StringConstant
+import hr.kbratko.eval.types.UByteConstant
+import hr.kbratko.eval.types.UIntConstant
+import hr.kbratko.eval.types.ULongConstant
+import hr.kbratko.eval.types.UShortConstant
 import org.jetbrains.kotlin.builtins.PrimitiveType
 import org.jetbrains.kotlin.builtins.UnsignedType
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments

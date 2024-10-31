@@ -1,15 +1,6 @@
 package hr.kbratko.eval.interpreter
 
 import arrow.core.Either
-import hr.kbratko.eval.ChildElementResultNotPresent
-import hr.kbratko.eval.ComptimeConstant
-import hr.kbratko.eval.InsufficientNumberOfEvaluatedArguments
-import hr.kbratko.eval.UninitializedVariable
-import hr.kbratko.eval.UnsupportedElementType
-import hr.kbratko.eval.UnsupportedMethod
-import hr.kbratko.eval.ValueArgumentsCouldNotBeEvaluated
-import hr.kbratko.eval.ValueIsNotComptimeConstant
-import hr.kbratko.eval.VariableNotDeclared
 import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow
 import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.EvaluationError
 import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.LoopControl.Break
@@ -17,8 +8,19 @@ import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.LoopControl.Con
 import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.Return
 import hr.kbratko.eval.interpreter.EvaluationOutcome.EvaluationResult.ConstantResult
 import hr.kbratko.eval.interpreter.EvaluationOutcome.EvaluationResult.NoResult
+import hr.kbratko.eval.interpreter.functions.DefaultComptimeFunctionRegistry
 import hr.kbratko.eval.interpreter.stack.DeclarationStack
 import hr.kbratko.eval.toComptimeConstant
+import hr.kbratko.eval.types.ChildElementResultNotPresent
+import hr.kbratko.eval.types.ComptimeConstant
+import hr.kbratko.eval.types.InsufficientNumberOfEvaluatedArguments
+import hr.kbratko.eval.types.StringConstant
+import hr.kbratko.eval.types.UninitializedVariable
+import hr.kbratko.eval.types.UnsupportedElementType
+import hr.kbratko.eval.types.UnsupportedMethod
+import hr.kbratko.eval.types.ValueArgumentsCouldNotBeEvaluated
+import hr.kbratko.eval.types.ValueIsNotComptimeConstant
+import hr.kbratko.eval.types.VariableNotDeclared
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrVariable
@@ -34,6 +36,7 @@ import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.expressions.IrLoop
 import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.IrSetValue
+import org.jetbrains.kotlin.ir.expressions.IrStringConcatenation
 import org.jetbrains.kotlin.ir.expressions.IrTypeOperatorCall
 import org.jetbrains.kotlin.ir.expressions.IrWhen
 import org.jetbrains.kotlin.ir.expressions.IrWhileLoop
@@ -67,6 +70,7 @@ fun <E : IrElement> E.toInterpreter(): ComptimeIrElementInterpreter<E> =
         is IrTypeOperatorCall -> ComptimeIrTypeOperatorCallInterpreter(this)
         is IrReturn -> ComptimeIrReturnInterpreter(this)
         is IrBreakContinue -> ComptimeIrBreakContinueInterpreter(this)
+        is IrStringConcatenation -> ComptimeIrStringConcatenationInterpreter(this)
         else -> ComptimeDefaultInterpreter(this)
     } as ComptimeIrElementInterpreter<E>
 
@@ -77,6 +81,25 @@ class ComptimeDefaultInterpreter(
 ) : ComptimeIrElementInterpreter<IrElement> {
 
     override fun interpret(context: ComptimeInterpreterContext) = EvaluationError(UnsupportedElementType(element))
+
+}
+
+class ComptimeIrStringConcatenationInterpreter(
+    override val element: IrStringConcatenation
+) : ComptimeIrElementInterpreter<IrStringConcatenation> {
+
+    override fun interpret(context: ComptimeInterpreterContext): EvaluationOutcome =
+        element.arguments
+            .map {
+                when (val outcome = it.interpret(context)) {
+                    is ConstantResult -> outcome
+                    NoResult -> return EvaluationError(ChildElementResultNotPresent(element, it))
+                    else -> return outcome
+                }.value
+            }
+            .fold("") { a, b -> a + b.value }
+            .let(::StringConstant)
+            .let(::ConstantResult)
 
 }
 
@@ -158,7 +181,6 @@ class ComptimeIrCallInterpreter(
             )
         }
 
-        // TODO: add support for other eval function invocation
         if (arguments.isEmpty() || arguments.size != function.explicitParametersCount) {
             return EvaluationError(InsufficientNumberOfEvaluatedArguments(element))
         }

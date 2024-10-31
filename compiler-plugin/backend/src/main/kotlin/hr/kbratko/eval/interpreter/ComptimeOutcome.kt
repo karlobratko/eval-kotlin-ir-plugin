@@ -3,14 +3,14 @@ package hr.kbratko.eval.interpreter
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import hr.kbratko.eval.ComptimeConstant
-import hr.kbratko.eval.ComptimeError
-import hr.kbratko.eval.EmptyEvaluationOutcome
 import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.EvaluationError
 import hr.kbratko.eval.interpreter.EvaluationOutcome.ControlFlow.Return
 import hr.kbratko.eval.interpreter.EvaluationOutcome.EvaluationResult.ConstantResult
-import hr.kbratko.eval.isConstantFalse
-import hr.kbratko.eval.isConstantTrue
+import hr.kbratko.eval.types.ComptimeConstant
+import hr.kbratko.eval.types.ComptimeError
+import hr.kbratko.eval.types.EmptyEvaluationOutcome
+import hr.kbratko.eval.types.isConstantFalse
+import hr.kbratko.eval.types.isConstantTrue
 import org.jetbrains.kotlin.ir.expressions.IrLoop
 import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
 

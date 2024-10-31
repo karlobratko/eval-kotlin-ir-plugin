@@ -2,7 +2,14 @@ package hr.kbratko.eval
 
 import arrow.core.Either
 import arrow.core.left
-import hr.kbratko.eval.interpreter.comptimeCall
+import hr.kbratko.eval.interpreter.executeInComptime
+import hr.kbratko.eval.types.ArgumentTypesNotPrimitive
+import hr.kbratko.eval.types.ArgumentsNotConstants
+import hr.kbratko.eval.types.ComptimeConstant
+import hr.kbratko.eval.types.ComptimeError
+import hr.kbratko.eval.types.ComptimeProducedError
+import hr.kbratko.eval.types.ComptimeUnexpectedError
+import hr.kbratko.eval.types.ReturnTypeNotPrimitive
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 
@@ -48,6 +55,6 @@ class EvalFunctionTransformer(
             return ArgumentsNotConstants(call).left()
         }
 
-        return function.comptimeCall(parameters.zip(arguments).toMap())
+        return function.executeInComptime(parameters.zip(arguments).toMap())
     }
 }

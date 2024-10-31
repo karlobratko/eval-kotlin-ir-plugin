@@ -1,4 +1,4 @@
-package hr.kbratko.eval
+package hr.kbratko.eval.types
 
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFunction
