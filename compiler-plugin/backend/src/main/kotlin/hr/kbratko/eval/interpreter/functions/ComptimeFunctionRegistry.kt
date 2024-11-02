@@ -2,30 +2,12 @@ package hr.kbratko.eval.interpreter.functions
 
 import arrow.core.Either
 import arrow.core.left
-import hr.kbratko.eval.interpreter.functions.constant.registerBooleanOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerByteOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerCharOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerDoubleOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerEquals
-import hr.kbratko.eval.interpreter.functions.constant.registerFloatOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerIntOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerLongOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerReferenceEquals
-import hr.kbratko.eval.interpreter.functions.constant.registerShortOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerStringOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerUByteOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerUIntOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerULongOperators
-import hr.kbratko.eval.interpreter.functions.constant.registerUShortOperators
+import hr.kbratko.eval.interpreter.functions.constant.*
 import hr.kbratko.eval.types.ComptimeConstant
 import hr.kbratko.eval.types.ComptimeError
 import hr.kbratko.eval.types.UnsupportedMethod
 
-class ComptimeFunctionRegistry {
-    constructor(body: ComptimeFunctionRegistry.() -> Unit) {
-        this.body()
-    }
-
+class ComptimeFunctionRegistry(body: ComptimeFunctionRegistry.() -> Unit) {
     private val operations: MutableMap<String, MutableMap<ComptimeFunctionSignature, ComptimeFunction>> = mutableMapOf()
 
     fun register(vararg comptimeFunctions: ComptimeFunctionDefinition) {
@@ -44,11 +26,16 @@ class ComptimeFunctionRegistry {
             }
             ?.invoke(arguments)
             ?: UnsupportedMethod(name, arguments).left()
+
+    init {
+        this.body()
+    }
 }
 
 val DefaultComptimeFunctionRegistry = ComptimeFunctionRegistry {
     registerEquals()
-    registerReferenceEquals()
+    registerToString()
+    registerHashCode()
 
     registerBooleanOperators()
     registerByteOperators()

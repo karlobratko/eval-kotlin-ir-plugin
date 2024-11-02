@@ -6,13 +6,6 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kotlin.compiler)
-    implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.24")
     implementation(libs.arrow.core)
-
-    testImplementation(libs.test.junit.jupiter)
-    testImplementation(libs.test.kotest.assertions.core)
-    testImplementation(libs.test.kotest.assertions.core.jvm)
-    testImplementation(libs.test.mockk)
-    testRuntimeOnly(libs.test.junit.jupiter.engine)
 }

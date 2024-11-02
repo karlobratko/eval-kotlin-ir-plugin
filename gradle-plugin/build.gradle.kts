@@ -38,7 +38,6 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
     implementation(libs.kotlin.gradle.plugin)
 
     testImplementation(libs.test.junit.jupiter)

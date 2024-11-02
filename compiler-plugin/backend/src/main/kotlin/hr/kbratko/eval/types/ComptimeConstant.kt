@@ -44,6 +44,6 @@ data class FloatConstant(override val value: Float) : DecimalConstant
 
 data class DoubleConstant(override val value: Double) : DecimalConstant
 
-fun ComptimeConstant.isConstantTrue() = this is BooleanConstant && this.value == true
+fun ComptimeConstant.isConstantTrue() = this is BooleanConstant && this.value
 
-fun ComptimeConstant.isConstantFalse() = this is BooleanConstant && this.value == false
+fun ComptimeConstant.isConstantFalse() = this is BooleanConstant && !this.value

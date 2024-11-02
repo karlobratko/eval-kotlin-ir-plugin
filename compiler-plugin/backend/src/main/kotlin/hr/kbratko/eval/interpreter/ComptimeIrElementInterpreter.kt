@@ -10,39 +10,13 @@ import hr.kbratko.eval.interpreter.EvaluationOutcome.EvaluationResult.ConstantRe
 import hr.kbratko.eval.interpreter.EvaluationOutcome.EvaluationResult.NoResult
 import hr.kbratko.eval.interpreter.functions.DefaultComptimeFunctionRegistry
 import hr.kbratko.eval.interpreter.stack.DeclarationStack
+import hr.kbratko.eval.isComptimeConstant
 import hr.kbratko.eval.toComptimeConstant
-import hr.kbratko.eval.types.ChildElementResultNotPresent
-import hr.kbratko.eval.types.ComptimeConstant
-import hr.kbratko.eval.types.InsufficientNumberOfEvaluatedArguments
-import hr.kbratko.eval.types.StringConstant
-import hr.kbratko.eval.types.UninitializedVariable
-import hr.kbratko.eval.types.UnsupportedElementType
-import hr.kbratko.eval.types.UnsupportedMethod
-import hr.kbratko.eval.types.ValueArgumentsCouldNotBeEvaluated
-import hr.kbratko.eval.types.ValueIsNotComptimeConstant
-import hr.kbratko.eval.types.VariableNotDeclared
+import hr.kbratko.eval.types.*
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrVariable
-import org.jetbrains.kotlin.ir.expressions.IrBlock
-import org.jetbrains.kotlin.ir.expressions.IrBlockBody
-import org.jetbrains.kotlin.ir.expressions.IrBreak
-import org.jetbrains.kotlin.ir.expressions.IrBreakContinue
-import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.expressions.IrConst
-import org.jetbrains.kotlin.ir.expressions.IrContinue
-import org.jetbrains.kotlin.ir.expressions.IrDoWhileLoop
-import org.jetbrains.kotlin.ir.expressions.IrGetValue
-import org.jetbrains.kotlin.ir.expressions.IrLoop
-import org.jetbrains.kotlin.ir.expressions.IrReturn
-import org.jetbrains.kotlin.ir.expressions.IrSetValue
-import org.jetbrains.kotlin.ir.expressions.IrStringConcatenation
-import org.jetbrains.kotlin.ir.expressions.IrTypeOperatorCall
-import org.jetbrains.kotlin.ir.expressions.IrWhen
-import org.jetbrains.kotlin.ir.expressions.IrWhileLoop
-import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.isPrimitiveType
-import org.jetbrains.kotlin.ir.types.isString
+import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.util.explicitParametersCount
 
 data class ComptimeInterpreterContext(
@@ -68,6 +42,7 @@ fun <E : IrElement> E.toInterpreter(): ComptimeIrElementInterpreter<E> =
         is IrWhen -> ComptimeIrWhenInterpreter(this)
         is IrCall -> ComptimeIrCallInterpreter(this)
         is IrTypeOperatorCall -> ComptimeIrTypeOperatorCallInterpreter(this)
+        is IrComposite -> ComptimeIrCompositeInterpreter(this)
         is IrReturn -> ComptimeIrReturnInterpreter(this)
         is IrBreakContinue -> ComptimeIrBreakContinueInterpreter(this)
         is IrStringConcatenation -> ComptimeIrStringConcatenationInterpreter(this)
@@ -122,9 +97,7 @@ class ComptimeIrReturnInterpreter(
 ) : ComptimeIrElementInterpreter<IrReturn> {
 
     override fun interpret(context: ComptimeInterpreterContext): EvaluationOutcome {
-        val outcome = element.value.interpret(context)
-
-        return when (outcome) {
+        return when (val outcome = element.value.interpret(context)) {
             is ConstantResult -> Return(outcome.value, element.returnTargetSymbol)
             NoResult -> EvaluationError(ChildElementResultNotPresent(element, element.value))
             else -> outcome
@@ -133,12 +106,28 @@ class ComptimeIrReturnInterpreter(
 
 }
 
+// TODO: extend behaviour by inspecting operator and typeOperand types, do type cast
+//       This will allow us to support type casting and is statements.
 class ComptimeIrTypeOperatorCallInterpreter(
     override val element: IrTypeOperatorCall
 ) : ComptimeIrElementInterpreter<IrTypeOperatorCall> {
 
     override fun interpret(context: ComptimeInterpreterContext) =
         element.argument.interpret(context)
+
+}
+
+class ComptimeIrCompositeInterpreter(
+    override val element: IrComposite
+) : ComptimeIrElementInterpreter<IrComposite> {
+
+    override fun interpret(context: ComptimeInterpreterContext): EvaluationOutcome {
+        this.element.statements.forEach {
+            val outcome = it.interpret(context)
+            if (outcome.isControlFlow) return outcome
+        }
+        return NoResult
+    }
 
 }
 
@@ -162,6 +151,19 @@ class ComptimeIrCallInterpreter(
                     else -> return receiverOutcome
                 }
             )
+        } else {
+            val extensionReceiver = element.extensionReceiver
+            if (extensionReceiver != null) {
+                val receiverOutcome = extensionReceiver.interpret(context)
+
+                arguments.add(
+                    when (receiverOutcome) {
+                        is ConstantResult -> receiverOutcome.value
+                        NoResult -> return EvaluationError(ChildElementResultNotPresent(element, extensionReceiver))
+                        else -> return receiverOutcome
+                    }
+                )
+            }
         }
 
         val valueArguments = element.valueArguments.filterNotNull()
@@ -185,7 +187,7 @@ class ComptimeIrCallInterpreter(
             return EvaluationError(InsufficientNumberOfEvaluatedArguments(element))
         }
 
-        if (!function.returnType.isPrimitiveTypeOrString()) {
+        if (!function.returnType.isComptimeConstant()) {
             return EvaluationError(UnsupportedMethod(function.name.asString(), arguments))
         }
 
@@ -198,8 +200,6 @@ class ComptimeIrCallInterpreter(
             is Either.Right -> ConstantResult(result.value)
         }
     }
-
-    fun IrType.isPrimitiveTypeOrString(): Boolean = this.isPrimitiveType() || this.isString()
 
 }
 
@@ -246,9 +246,7 @@ class ComptimeIrLoopInterpreter(
 
             val body = element.body
             if (body != null) {
-                val bodyOutcome = body.interpret(context)
-
-                when (bodyOutcome) {
+                when (val bodyOutcome = body.interpret(context)) {
                     is Break -> {
                         if (bodyOutcome.matches(element)) break
                         else return bodyOutcome
@@ -272,9 +270,7 @@ class ComptimeIrLoopInterpreter(
         do {
             val body = element.body
             if (body != null) {
-                val bodyOutcome = body.interpret(context)
-
-                when (bodyOutcome) {
+                when (val bodyOutcome = body.interpret(context)) {
                     is Break -> {
                         if (bodyOutcome.matches(element)) break
                         else return bodyOutcome
@@ -329,9 +325,7 @@ class ComptimeIrSetValueInterpreter(
 ) : ComptimeIrElementInterpreter<IrSetValue> {
 
     override fun interpret(context: ComptimeInterpreterContext): EvaluationOutcome {
-        val outcome = element.value.interpret(context)
-
-        return when (outcome) {
+        return when (val outcome = element.value.interpret(context)) {
             is ConstantResult -> {
                 context.scopeStack.write(
                     name = element.symbol.owner,
@@ -356,9 +350,7 @@ class ComptimeIrVariableInterpreter(
     override fun interpret(context: ComptimeInterpreterContext): EvaluationOutcome {
         val initializer = element.initializer
         if (initializer != null) {
-            val outcome = initializer.interpret(context)
-
-            return when (outcome) {
+            return when (val outcome = initializer.interpret(context)) {
                 is ConstantResult -> {
                     context.scopeStack.declare(
                         name = element,

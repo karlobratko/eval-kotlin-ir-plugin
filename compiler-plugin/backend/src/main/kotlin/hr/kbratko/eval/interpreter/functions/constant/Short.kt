@@ -1,36 +1,15 @@
 package hr.kbratko.eval.interpreter.functions.constant
 
 import arrow.core.right
-import hr.kbratko.eval.interpreter.functions.ComptimeFunction
-import hr.kbratko.eval.interpreter.functions.ComptimeFunctionDefinition
-import hr.kbratko.eval.interpreter.functions.ComptimeFunctionSignature
-import hr.kbratko.eval.interpreter.functions.FunctionName
-import hr.kbratko.eval.interpreter.functions.ShortConstantType
-import hr.kbratko.eval.interpreter.functions.SignedConstantType
-import hr.kbratko.eval.interpreter.functions.SignedIntegerConstantType
-import hr.kbratko.eval.types.BooleanConstant
-import hr.kbratko.eval.types.ByteConstant
-import hr.kbratko.eval.types.CharConstant
-import hr.kbratko.eval.types.DoubleConstant
-import hr.kbratko.eval.types.FloatConstant
-import hr.kbratko.eval.types.IntConstant
-import hr.kbratko.eval.types.LongConstant
-import hr.kbratko.eval.types.ShortConstant
-import hr.kbratko.eval.types.SignedConstant
-import hr.kbratko.eval.types.SignedIntegerConstant
-import hr.kbratko.eval.types.StringConstant
-import hr.kbratko.eval.types.UByteConstant
-import hr.kbratko.eval.types.UIntConstant
-import hr.kbratko.eval.types.ULongConstant
-import hr.kbratko.eval.types.UShortConstant
+import hr.kbratko.eval.interpreter.functions.*
+import hr.kbratko.eval.types.*
 
-fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShortOperators() {
-    @Suppress("UNCHECKED_CAST")
+fun ComptimeFunctionRegistry.registerShortOperators() {
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("compareTo"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, SignedConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as SignedConstant
                 IntConstant(
@@ -47,12 +26,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("greater"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as ShortConstant
                 BooleanConstant(receiver.value > other.value).right()
@@ -60,12 +38,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("greaterOrEqual"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as ShortConstant
                 BooleanConstant(receiver.value >= other.value).right()
@@ -73,12 +50,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("less"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as ShortConstant
                 BooleanConstant(receiver.value < other.value).right()
@@ -86,12 +62,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("lessOrEqual"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as ShortConstant
                 BooleanConstant(receiver.value <= other.value).right()
@@ -99,12 +74,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("plus"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, SignedConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as SignedConstant
                 when (other) {
@@ -119,12 +93,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("minus"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, SignedConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as SignedConstant
                 when (other) {
@@ -139,12 +112,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("times"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, SignedConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as SignedConstant
                 when (other) {
@@ -159,12 +131,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("div"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, SignedConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as SignedConstant
                 when (other) {
@@ -179,12 +150,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("rem"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, SignedConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as SignedConstant
                 when (other) {
@@ -199,12 +169,11 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("mod"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType, SignedIntegerConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 val other = args[1] as SignedIntegerConstant
                 when (other) {
@@ -217,194 +186,156 @@ fun hr.kbratko.eval.interpreter.functions.ComptimeFunctionRegistry.registerShort
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("inc"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 ShortConstant(receiver.value.inc()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("dec"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 ShortConstant(receiver.value.dec()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("unaryPlus"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 IntConstant(receiver.value.unaryPlus()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("unaryMinus"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 IntConstant(receiver.value.unaryMinus()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toByte"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 ByteConstant(receiver.value.toByte()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
-    register(
-        ComptimeFunctionDefinition(
-            name = FunctionName("toChar"),
-            signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
-                val receiver = args[0] as ShortConstant
-                CharConstant(receiver.value.toChar()).right()
-            }
-        )
-    )
-
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toShort"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
-                ShortConstant(receiver.value.toShort()).right()
+                ShortConstant(receiver.value).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toInt"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 IntConstant(receiver.value.toInt()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toLong"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 LongConstant(receiver.value.toLong()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toUByte"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 UByteConstant(receiver.value.toUByte()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toUShort"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 UShortConstant(receiver.value.toUShort()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toUInt"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 UIntConstant(receiver.value.toUInt()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toULong"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 ULongConstant(receiver.value.toULong()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toFloat"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 FloatConstant(receiver.value.toFloat()).right()
             }
         )
     )
 
-    @Suppress("UNCHECKED_CAST")
     register(
         ComptimeFunctionDefinition(
             name = FunctionName("toDouble"),
             signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
+            implementation = { args ->
                 val receiver = args[0] as ShortConstant
                 DoubleConstant(receiver.value.toDouble()).right()
-            }
-        )
-    )
-
-    @Suppress("UNCHECKED_CAST")
-    register(
-        ComptimeFunctionDefinition(
-            name = FunctionName("toString"),
-            signature = ComptimeFunctionSignature(listOf(ShortConstantType)),
-            implementation = ComptimeFunction { args ->
-                val receiver = args[0] as ShortConstant
-                StringConstant(receiver.value.toString()).right()
             }
         )
     )

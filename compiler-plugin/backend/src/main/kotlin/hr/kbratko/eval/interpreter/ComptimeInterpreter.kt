@@ -12,8 +12,7 @@ import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
 
 fun IrFunction.executeInComptime(arguments: Map<IrValueDeclaration, ComptimeConstant>): Either<ComptimeError, ComptimeConstant> {
-    val body = body
-    if (body == null) return FunctionBodyNotPresent(this).left()
+    val body = body ?: return FunctionBodyNotPresent(this).left()
 
     return try {
         body.interpret(ComptimeInterpreterContext(DeclarationStack(DeclarationScope(arguments))))

@@ -8,7 +8,7 @@ data class FunctionName(val value: String)
 
 fun GetterName(value: String) = FunctionName("<get-$value>")
 
-data class ComptimeFunctionSignature(val argumentTypes: List<ComptimeType>)
+data class ComptimeFunctionSignature(val argumentTypes: List<ComptimeTypePredicate>)
 
 fun interface ComptimeFunction {
     operator fun invoke(arguments: List<ComptimeConstant>): Either<ComptimeError, ComptimeConstant>

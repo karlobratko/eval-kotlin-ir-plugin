@@ -1,19 +1,6 @@
 package hr.kbratko.eval
 
-import hr.kbratko.eval.types.BooleanConstant
-import hr.kbratko.eval.types.ByteConstant
-import hr.kbratko.eval.types.CharConstant
-import hr.kbratko.eval.types.ComptimeConstant
-import hr.kbratko.eval.types.DoubleConstant
-import hr.kbratko.eval.types.FloatConstant
-import hr.kbratko.eval.types.IntConstant
-import hr.kbratko.eval.types.LongConstant
-import hr.kbratko.eval.types.ShortConstant
-import hr.kbratko.eval.types.StringConstant
-import hr.kbratko.eval.types.UByteConstant
-import hr.kbratko.eval.types.UIntConstant
-import hr.kbratko.eval.types.ULongConstant
-import hr.kbratko.eval.types.UShortConstant
+import hr.kbratko.eval.types.*
 import org.jetbrains.kotlin.builtins.PrimitiveType
 import org.jetbrains.kotlin.builtins.UnsignedType
 import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
@@ -23,15 +10,9 @@ import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstKind
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
-import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.getPrimitiveType
-import org.jetbrains.kotlin.ir.types.getUnsignedType
-import org.jetbrains.kotlin.ir.types.isNullable
-import org.jetbrains.kotlin.ir.types.isPrimitiveType
-import org.jetbrains.kotlin.ir.types.isString
-import org.jetbrains.kotlin.ir.types.isUnsignedType
+import org.jetbrains.kotlin.ir.interpreter.hasAnnotation
+import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.allParameters
-import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.name.FqName
 
 fun IrFunction.hasAnyOfAnnotations(annotations: List<String>) =
@@ -59,7 +40,7 @@ fun IrCall.getComptimeConstant(): ComptimeConstant? {
     return initializer?.toComptimeConstant()
 }
 
-fun IrType.isComptimeConstant(): Boolean = isPrimitiveType() || isString()
+fun IrType.isComptimeConstant(): Boolean = isPrimitiveType() || isUnsignedType() || isString()
 
 fun IrFunction.allParameterTypesAreComptimeConstants(): Boolean =
     this.allParameters.all { it.type.isComptimeConstant() }
@@ -71,15 +52,6 @@ fun IrConst<*>.toComptimeConstant(): ComptimeConstant? {
     if (this.type.isNullable()) return null
 
     if (this.type.isPrimitiveType()) {
-        if (this.type.isUnsignedType()) {
-            return when (this.type.getUnsignedType()) {
-                UnsignedType.UBYTE -> UByteConstant(this.value as UByte)
-                UnsignedType.USHORT -> UShortConstant(this.value as UShort)
-                UnsignedType.UINT -> UIntConstant(this.value as UInt)
-                UnsignedType.ULONG -> ULongConstant(this.value as ULong)
-                null -> null
-            }
-        }
         return when (this.type.getPrimitiveType()) {
             PrimitiveType.BOOLEAN -> BooleanConstant(this.value as Boolean)
             PrimitiveType.CHAR -> CharConstant(this.value as Char)
@@ -92,6 +64,17 @@ fun IrConst<*>.toComptimeConstant(): ComptimeConstant? {
             null -> null
         }
     }
+
+    if (this.type.isUnsignedType()) {
+        return when (this.type.getUnsignedType()) {
+            UnsignedType.UBYTE -> UByteConstant((this.value as Byte).toUByte())
+            UnsignedType.USHORT -> UShortConstant((this.value as Short).toUShort())
+            UnsignedType.UINT -> UIntConstant((this.value as Int).toUInt())
+            UnsignedType.ULONG -> ULongConstant((this.value as Long).toULong())
+            null -> null
+        }
+    }
+
     if (this.type.isString()) return StringConstant(this.value as String)
 
     return null
