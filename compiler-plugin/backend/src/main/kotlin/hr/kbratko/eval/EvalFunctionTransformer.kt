@@ -38,6 +38,7 @@ class EvalFunctionTransformer(
 
         if (!call.returnTypeIsComptimeConstant()) return ReturnTypeNotPrimitive(call).left()
 
+        // TODO: add support for not only const val, but also val which has IrConst value in comptime
         if (!function.allParameterTypesAreComptimeConstants()) return ArgumentTypesNotPrimitive(call).left()
         val parameters = function.valueParameters
 

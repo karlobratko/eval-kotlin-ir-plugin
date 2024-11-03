@@ -226,6 +226,7 @@ class ComptimeIrWhenInterpreter(
 
 }
 
+// TODO: monitor loop execution for infinite loops
 class ComptimeIrLoopInterpreter(
     override val element: IrLoop
 ) : ComptimeIrElementInterpreter<IrLoop> {
