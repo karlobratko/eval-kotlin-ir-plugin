@@ -81,7 +81,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(21),
+                    LoadConstant(21L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -94,7 +94,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(21),
+                    LoadConstant(21L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -107,7 +107,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(10),
+                    LoadConstant(10L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -120,7 +120,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(10),
+                    LoadConstant(10L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -133,7 +133,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(110),
+                    LoadConstant(110L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -146,7 +146,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(110),
+                    LoadConstant(110L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -159,7 +159,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(2),
+                    LoadConstant(2L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -172,7 +172,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(2),
+                    LoadConstant(2L),
                     StoreLong(0)
                 ) atLine 4
             ),
@@ -237,7 +237,7 @@ object ULongOperatorTests : ShouldSpec({
                 }
                 """,
                 listOf(
-                    LoadConstant(2),
+                    LoadConstant(2L),
                     StoreLong(0)
                 ) atLine 4
             ),

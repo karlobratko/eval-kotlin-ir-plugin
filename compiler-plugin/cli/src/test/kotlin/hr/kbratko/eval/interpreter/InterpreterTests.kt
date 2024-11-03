@@ -1,10 +1,9 @@
-package hr.kbratko.eval.interpreter.concepts
+package hr.kbratko.eval.interpreter
 
 import hr.kbratko.eval.*
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.datatest.withData
 
-// TODO: add more tests for while loop, and more complex program examples
 object InterpreterTests : ShouldSpec({
     context("if expression") {
         withData(
@@ -218,6 +217,123 @@ object InterpreterTests : ShouldSpec({
                         PushByte(11),
                         StoreInteger(0)
                     ) atLine 10
+                )
+            )
+        ) { it.test() }
+    }
+
+    context("returns and jumps") {
+        withData(
+            mapOf(
+                "return" to OperatorTest(
+                    source = """
+                    fun evalTest(a: Int, b: Int): Int {
+                        var i = 0
+                        while (true) {
+                            if (i == 10) return i
+                            i++
+                        }
+                        return i
+                    }
+    
+                    fun main() {
+                        val result = evalTest(10, 11)
+                    }
+                    """,
+                    listOf(
+                        PushByte(10),
+                        StoreInteger(0)
+                    ) atLine 11
+                ),
+                "break" to OperatorTest(
+                    source = """
+                    fun evalTest(a: Int, b: Int): Int {
+                        var i = 0
+                        while (true) {
+                            if (i == 10) break
+                            i++
+                        }
+                        return i
+                    }
+    
+                    fun main() {
+                        val result = evalTest(10, 11)
+                    }
+                    """,
+                    listOf(
+                        PushByte(10),
+                        StoreInteger(0)
+                    ) atLine 11
+                ),
+                "break with label" to OperatorTest(
+                    source = """
+                    fun evalTest(a: Int, b: Int): Int {
+                        var i = 0
+                        outer@ while (true) {
+                            var j = 0
+                            while (j < 5) {
+                                if (i == 10) break@outer
+                                j++
+                            }
+                            i++
+                        }
+                        return i
+                    }
+    
+                    fun main() {
+                        val result = evalTest(10, 11)
+                    }
+                    """,
+                    listOf(
+                        PushByte(10),
+                        StoreInteger(0)
+                    ) atLine 15
+                ),
+                "continue" to OperatorTest(
+                    source = """
+                    fun evalTest(a: Int, b: Int): Int {
+                        var i = 0
+                        while (true) {
+                            i++
+                            if (i < 10) continue
+                            break
+                        }
+                        return i
+                    }
+    
+                    fun main() {
+                        val result = evalTest(10, 11)
+                    }
+                    """,
+                    listOf(
+                        PushByte(10),
+                        StoreInteger(0)
+                    ) atLine 12
+                ),
+                "continue with label" to OperatorTest(
+                    source = """
+                    fun evalTest(a: Int, b: Int): Int {
+                        var i = 0
+                        outer@ while (true) {
+                            i++
+                            var j = 0
+                            while (j < 5) {
+                                j++
+                                if (i < 10) continue@outer
+                            }
+                            break
+                        }
+                        return i
+                    }
+    
+                    fun main() {
+                        val result = evalTest(10, 11)
+                    }
+                    """,
+                    listOf(
+                        PushByte(10),
+                        StoreInteger(0)
+                    ) atLine 16
                 )
             )
         ) { it.test() }

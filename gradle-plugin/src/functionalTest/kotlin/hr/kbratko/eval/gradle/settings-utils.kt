@@ -42,7 +42,6 @@ fun File.registerCheckEvalExtensionTask() = apply {
                 doLast {
                     val evalExtension = project.extensions.findByType(hr.kbratko.eval.gradle.EvalExtension::class.java)
                     if (evalExtension != null) {
-                        println("Annotations: ${'$'}{evalExtension.annotations.get()}")
                         println("Prefixes: ${'$'}{evalExtension.prefixes.get()}")
                     } else {
                         throw RuntimeException("EvalExtension is not registered!")

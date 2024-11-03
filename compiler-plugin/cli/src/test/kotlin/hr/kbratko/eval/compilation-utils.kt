@@ -26,7 +26,7 @@ fun kotlinCompilation(source: SourceFile) =
     KotlinCompilation().apply {
         sources = listOf(source)
         inheritClassPath = true
-        compilerPluginRegistrars = listOf(EvalComponentRegistrar())
+        compilerPluginRegistrars = listOf(EvalComponentRegistrar(listOf("eval")))
         commandLineProcessors = listOf(EvalCommandLineProcessor())
     }
 

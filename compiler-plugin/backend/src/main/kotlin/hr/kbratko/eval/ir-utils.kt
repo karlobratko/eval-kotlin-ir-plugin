@@ -10,13 +10,8 @@ import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrConstKind
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
-import org.jetbrains.kotlin.ir.interpreter.hasAnnotation
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.allParameters
-import org.jetbrains.kotlin.name.FqName
-
-fun IrFunction.hasAnyOfAnnotations(annotations: List<String>) =
-    annotations.any { hasAnnotation(FqName(it)) }
 
 fun IrFunction.nameHasAnyOfPrefixes(prefixes: List<String>) =
     prefixes.any { name.asString().startsWith(it) }

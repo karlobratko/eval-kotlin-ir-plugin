@@ -13,7 +13,6 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import javax.inject.Inject
 
-private val DEFAULT_ANNOTATIONS = emptyList<String>()
 private val DEFAULT_PREFIXES = listOf("eval")
 
 class EvalGradleSubplugin @Inject internal constructor(
@@ -21,7 +20,6 @@ class EvalGradleSubplugin @Inject internal constructor(
 ) : KotlinCompilerPluginSupportPlugin {
     override fun apply(target: Project) {
         target.createEvalExtension {
-            annotations.convention(DEFAULT_ANNOTATIONS)
             prefixes.convention(DEFAULT_PREFIXES)
         }
         registry.register(EvalBuilder)
@@ -37,7 +35,6 @@ class EvalGradleSubplugin @Inject internal constructor(
         return project.provider {
             val options = mutableListOf<SubpluginOption>()
 
-            options += evalExtension.annotations.get().map { AnnotationOption(it) }
             options += evalExtension.prefixes.get().map { PrefixOption(it) }
 
             options

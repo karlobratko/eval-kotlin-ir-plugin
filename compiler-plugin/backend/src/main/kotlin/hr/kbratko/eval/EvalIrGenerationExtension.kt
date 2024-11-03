@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
 
 class EvalIrGenerationExtension(
     messageCollector: MessageCollector,
-    private val annotations: List<String>,
     private val prefixes: List<String>,
 ) : IrGenerationExtension {
     private val messageCollector = EvalMessageCollector(messageCollector)
@@ -18,16 +17,14 @@ class EvalIrGenerationExtension(
         moduleFragment: IrModuleFragment,
         pluginContext: IrPluginContext
     ) {
-        messageCollector.reportInfo("Argument 'annotations' = $annotations")
         messageCollector.reportInfo("Argument 'prefixes' = $prefixes")
 
         moduleFragment.transformChildrenVoid(
             EvalFunctionTransformer(
                 messageCollector = EvalMessageCollector(messageCollector),
                 evalConfig = EvalConfig(
-                    annotations = annotations,
                     prefixes = prefixes
-                ),
+                )
             )
         )
 

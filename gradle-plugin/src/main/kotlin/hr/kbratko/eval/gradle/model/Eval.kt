@@ -18,13 +18,6 @@ interface Eval {
     val name: String
 
     /**
-     * Return the list of annotations.
-     *
-     * @return the list of annotations.
-     */
-    val annotations: List<String>
-
-    /**
      * Return the list of prefixes.
      *
      * @return the list of prefixes.

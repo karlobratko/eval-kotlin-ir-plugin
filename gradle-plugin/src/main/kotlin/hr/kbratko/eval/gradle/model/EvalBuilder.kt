@@ -14,7 +14,7 @@ internal object EvalBuilder : ToolingModelBuilder {
         require(canBuild(modelName)) { "buildAll(\"$modelName\") has been called while canBeBuild is false" }
 
         val extension = project.extensions.getByType(EvalExtension::class.java)
-        return EvalImpl(project.name, extension.annotations.get(), extension.prefixes.get())
+        return EvalImpl(project.name, extension.prefixes.get())
     }
 
 }

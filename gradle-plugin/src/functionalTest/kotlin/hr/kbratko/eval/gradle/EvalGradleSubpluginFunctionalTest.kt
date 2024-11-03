@@ -28,7 +28,6 @@ class EvalGradleSubpluginFunctionalTest {
         val result = runner.build()
 
         // then
-        result outputShouldContainAnnotations "[]"
         result outputShouldContainPrefixes "[eval]"
     }
 
@@ -43,7 +42,6 @@ class EvalGradleSubpluginFunctionalTest {
             .appendPluginConfig(
                 """
                     eval {
-                        annotations("org.example.Eval")
                         prefixes("eval", "test")
                     }
                 """.trimIndent()
@@ -56,7 +54,6 @@ class EvalGradleSubpluginFunctionalTest {
         val result = runner.build()
 
         // then
-        result outputShouldContainAnnotations "[org.example.Eval]"
         result outputShouldContainPrefixes "[eval, test]"
     }
 }

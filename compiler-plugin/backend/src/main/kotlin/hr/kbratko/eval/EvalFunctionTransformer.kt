@@ -15,7 +15,7 @@ class EvalFunctionTransformer(
     override fun visitCall(expression: IrCall): IrExpression {
         val function = expression.symbol.owner
 
-        if (function.hasAnyOfAnnotations(evalConfig.annotations) || function.nameHasAnyOfPrefixes(evalConfig.prefixes)) {
+        if (function.nameHasAnyOfPrefixes(evalConfig.prefixes)) {
             messageCollector.reportInfo("Located function ${function.name.asString()}, starting comptime evaluation")
 
             val evaluatedResult = tryEvaluateCall(expression)

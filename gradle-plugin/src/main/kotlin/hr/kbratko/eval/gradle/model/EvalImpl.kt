@@ -4,7 +4,6 @@ import java.io.Serializable
 
 internal data class EvalImpl(
     override val name: String,
-    override val annotations: List<String>,
     override val prefixes: List<String>
 ) : Eval, Serializable {
 
