@@ -1,7 +1,7 @@
 description = "Kotlin Eval Compiler Plugin (CLI)"
 
 plugins {
-    kotlin("jvm") version "1.9.24"
+    alias(libs.plugins.kotlin.jvm)
     kotlin("kapt")
     alias(libs.plugins.gradle.buildconfig)
 }
@@ -25,21 +25,9 @@ buildConfig {
 dependencies {
     implementation(project(":compiler-plugin:backend"))
 
-    implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.24")
+    implementation(libs.kotlin.compiler.embeddable)
 
     implementation(libs.auto.service.annotations)
-    implementation(libs.arrow.core)
-
-    testImplementation(libs.test.kotest.junit5)
-    testImplementation(libs.test.kotest.datatest)
-    testImplementation(libs.test.kotest.property)
-    testImplementation(libs.test.kotest.assertions.core)
-    testImplementation(libs.test.kotest.assertions.core.jvm)
-
-    testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.6.0")
-
-    testImplementation("org.ow2.asm:asm:9.7.1")
-    testImplementation("org.ow2.asm:asm-tree:9.7.1")
 }
 
 tasks.test {

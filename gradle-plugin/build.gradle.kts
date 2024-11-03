@@ -40,33 +40,20 @@ gradlePlugin {
 dependencies {
     implementation(libs.kotlin.gradle.plugin)
 
-    testImplementation(libs.test.junit.jupiter)
+    testImplementation(libs.test.kotest.junit5)
+    testImplementation(libs.test.kotest.datatest)
+    testImplementation(libs.test.kotest.property)
     testImplementation(libs.test.kotest.assertions.core)
     testImplementation(libs.test.kotest.assertions.core.jvm)
     testImplementation(libs.test.mockk)
-    testRuntimeOnly(libs.test.junit.jupiter.engine)
 }
 
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
-}
-
-configurations["functionalTestImplementation"].extendsFrom(configurations["testImplementation"])
-configurations["functionalTestRuntimeOnly"].extendsFrom(configurations["testRuntimeOnly"])
-
-val functionalTest by tasks.registering(Test::class) {
-    testClassesDirs = functionalTestSourceSet.output.classesDirs
-    classpath = functionalTestSourceSet.runtimeClasspath
+tasks.test {
     useJUnitPlatform()
 }
 
-gradlePlugin.testSourceSets.add(functionalTestSourceSet)
-
 tasks.named("jar") {
     enabled = false
-}
-
-tasks.named<Task>("check") {
-    dependsOn(functionalTest)
 }
 
 tasks.named<Test>("test") {

@@ -1,18 +1,15 @@
 package hr.kbratko.eval.gradle
 
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.engine.spec.tempdir
 import java.io.File
 
-// TODO: use Kotest
-class EvalGradleSubpluginFunctionalTest {
+class EvalGradleSubpluginFunctionalTests : ShouldSpec({
 
-    @TempDir
-    lateinit var projectDir: File
-
-    @Test
-    fun `should work with default configuration`() {
+    should("work with default configuration") {
         // given
+        val projectDir: File = tempdir("projectDir")
+
         projectDir.settingsGradleKts
             .withDefaultConfig()
 
@@ -29,9 +26,10 @@ class EvalGradleSubpluginFunctionalTest {
         result outputShouldContainPrefixes "[eval]"
     }
 
-    @Test
-    fun `should work with custom configuration`() {
+    should("work with custom configuration") {
         // given
+        val projectDir: File = tempdir("projectDir")
+
         projectDir.settingsGradleKts
             .withDefaultConfig()
 
@@ -54,4 +52,4 @@ class EvalGradleSubpluginFunctionalTest {
         // then
         result outputShouldContainPrefixes "[eval, test]"
     }
-}
+})

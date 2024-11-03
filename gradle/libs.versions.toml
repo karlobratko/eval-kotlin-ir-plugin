@@ -7,34 +7,29 @@ gradle-publish = "1.2.1"
 auto-service = "1.1.1"
 
 arrow = "1.2.4"
+asm = "9.7.1"
 
-test-junit-jupiter = "5.10.3"
 test-kotest = "5.8.0"
 test-mockk = "1.13.10"
+test-kotlin-compile = "1.6.0"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "gradle-build-config" }
 gradle-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish" }
 
 [libraries]
-kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
-kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlin" }
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-kotlin-gradle-plugin-api = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin" }
-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
-auto-service-processor = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 
-test-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "test-junit-jupiter" }
-test-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "test-junit-jupiter" }
-test-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "test-junit-jupiter" }
+asm-core = { module = "org.ow2.asm:asm", version.ref = "asm" }
+asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
+
+test-kotlin-compile = { module = "com.github.tschuchortdev:kotlin-compile-testing", version.ref = "test-kotlin-compile" }
 
 test-kotest-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "test-kotest" }
 test-kotest-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "test-kotest" }
