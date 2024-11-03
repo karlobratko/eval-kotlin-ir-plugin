@@ -229,14 +229,3 @@ following:
 3. **Enhanced Type Safety**: Improving type-checking during compile-time evaluation could prevent certain errors from
    propagating to runtime, especially for functions and operators with multiple overloads. Building a more sophisticated
    type inference and validation mechanism within the interpreter would further strengthen this.
-
-## Proposal for a Future Comptime IR Model
-
-We initially considered implementing a separate `ComptimeIr` model mapped from the backend IR model. This approach would
-have allowed more deterministic control and type safety in the comptime evaluation process. However, due to its
-complexity and resource requirements, this idea was set aside.
-
----
-
-This project offers a foundation for comptime evaluation within Kotlin, showcasing the potential of compile-time
-computation in optimizing runtime performance and code quality.
