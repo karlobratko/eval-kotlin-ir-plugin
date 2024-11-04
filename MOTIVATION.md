@@ -1,11 +1,12 @@
 # Motivation
 
 This project is especially interesting to me because it focuses on adding compile-time evaluation (or "comptime") to
-Kotlin. In high-level languages like Kotlin, where ease of use is often prioritized over performance, having
-computations resolved at compile time could create big advantages. Comptime evaluation would enable computations that
-are predictable or repetitive to be processed during compilation, reducing the work needed at runtime. This could not
-only improve runtime performance but also make code safer by catching certain errors earlier, leading to a smoother
-development experience overall.
+Kotlin. As I am huge fan of Zig language which introduced similar concepts, I find this project an opportunity for me to
+learn more about compilers but also contribute to adding comptime feature to Kotlin. In high-level languages like
+Kotlin, where ease of use is often prioritized over performance, having computations resolved at compile time could
+create big advantages. Comptime evaluation would enable computations that are predictable or repetitive to be processed
+during compilation, reducing the work needed at runtime. This could not only improve runtime performance but also make
+code safer by catching certain errors earlier, leading to a smoother development experience overall.
 
 ## High-level implementation steps
 
