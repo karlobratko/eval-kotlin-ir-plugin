@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.ir.declarations.IrValueDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.util.dump
+import kotlin.time.Duration
 
 sealed interface ComptimeError {
     val description: String
@@ -68,4 +69,12 @@ class UnsupportedElementType(element: IrElement) : ComptimeProducedError {
 
 class ValueIsNotComptimeConstant(element: IrElement) : ComptimeProducedError {
     override val description = "Value is not comptime constant (${element.dump()})"
+}
+
+class LoopIterationExceededError(element: IrElement, maxIterations: Int) : ComptimeProducedError {
+    override val description = "Loop exceeded $maxIterations iterations (${element.dump()})"
+}
+
+class LoopTimeoutError(element: IrElement, maxDuration: Duration) : ComptimeProducedError {
+    override val description = "Loop execution time exceeded ${maxDuration.inWholeMilliseconds} ms (${element.dump()})"
 }

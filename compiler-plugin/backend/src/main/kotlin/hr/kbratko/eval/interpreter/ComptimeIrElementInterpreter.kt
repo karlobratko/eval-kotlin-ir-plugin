@@ -18,6 +18,9 @@ import org.jetbrains.kotlin.ir.backend.js.utils.valueArguments
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.util.explicitParametersCount
+import java.lang.System.currentTimeMillis
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class ComptimeInterpreterContext(
     val scopeStack: DeclarationStack
@@ -226,9 +229,16 @@ class ComptimeIrWhenInterpreter(
 
 }
 
-// TODO: monitor loop execution for infinite loops
+/**
+ * TODO: Complexity-Tracking Approach
+ *  Introduce a general-purpose complexity tracker for ComptimeInterpreterContext that could monitor nested loop depth,
+ *  recursion depth, and complexity of the code. Each iteration would add to a “complexity score,” and if it exceeds a
+ *  threshold, the loop or the entire computation stops.
+ */
 class ComptimeIrLoopInterpreter(
-    override val element: IrLoop
+    override val element: IrLoop,
+    private val maxIterations: Int = 1000,
+    private val maxDuration: Duration = 5.seconds
 ) : ComptimeIrElementInterpreter<IrLoop> {
 
     override fun interpret(context: ComptimeInterpreterContext): EvaluationOutcome =
@@ -239,7 +249,17 @@ class ComptimeIrLoopInterpreter(
         }
 
     private fun handleWhileLoop(context: ComptimeInterpreterContext): EvaluationOutcome {
+        var iterations = 0
+        val startTime = currentTimeMillis()
+
         while (true) {
+            iterations++
+            if (iterations > maxIterations)
+                return EvaluationError(LoopIterationExceededError(element, maxIterations))
+
+            if (currentTimeMillis() - startTime > maxDuration.inWholeMilliseconds)
+                return EvaluationError(LoopTimeoutError(element, maxDuration))
+
             val conditionOutcome = element.condition.interpret(context)
             if (conditionOutcome.isControlFlow) return conditionOutcome
 
@@ -268,7 +288,17 @@ class ComptimeIrLoopInterpreter(
     }
 
     private fun handleDoWhileLoop(context: ComptimeInterpreterContext): EvaluationOutcome {
+        var iterations = 0
+        val startTime = currentTimeMillis()
+
         do {
+            iterations++
+            if (iterations > maxIterations)
+                return EvaluationError(LoopIterationExceededError(element, maxIterations))
+
+            if (currentTimeMillis() - startTime > maxDuration.inWholeMilliseconds)
+                return EvaluationError(LoopTimeoutError(element, maxDuration))
+
             val body = element.body
             if (body != null) {
                 when (val bodyOutcome = body.interpret(context)) {
