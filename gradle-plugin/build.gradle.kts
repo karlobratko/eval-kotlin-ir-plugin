@@ -27,6 +27,8 @@ buildConfig {
 }
 
 gradlePlugin {
+    website = "https://github.com/karlobratko/eval-kotlin-ir-plugin"
+    vcsUrl = "https://github.com/karlobratko/eval-kotlin-ir-plugin.git"
     plugins {
         create("evalPlugin") {
             id = groupId
@@ -39,6 +41,9 @@ gradlePlugin {
 
 dependencies {
     implementation(libs.kotlin.gradle.plugin)
+
+    compileOnly(project(":compiler-plugin:cli"))
+    compileOnly(project(":compiler-plugin:backend"))
 
     testImplementation(libs.test.kotest.junit5)
     testImplementation(libs.test.kotest.datatest)

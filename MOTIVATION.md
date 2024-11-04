@@ -99,3 +99,6 @@ offers several examples of how compile-time evaluation can be used as and exampl
 - Type Generation: Zig can generate and modify types at compile time, allowing for highly efficient and generic code.
   This eliminates runtime type-checking, providing both type safety and performance improvements by embedding types as
   constants in the binary.
+
+For practical examples take a look at following simple (in-progress) implementation of glm in
+Zig: https://github.com/karlobratko/ziglm.

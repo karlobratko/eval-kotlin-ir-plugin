@@ -5,8 +5,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":compiler-plugin:backend"))
-    implementation(project(":compiler-plugin:cli"))
+    testImplementation(project(":compiler-plugin:backend"))
+    testImplementation(project(":compiler-plugin:cli"))
 
     testImplementation(libs.test.kotest.junit5)
     testImplementation(libs.test.kotest.datatest)
